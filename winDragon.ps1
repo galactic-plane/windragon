@@ -75,7 +75,7 @@ function Show-Message {
         [string]$message
     )
     try {
-        $border = '─' * ($message.Length + 2)
+        $border = '�' * ($message.Length)
         Write-Host "┌$border┐" -ForegroundColor Yellow
         Write-Host " $message " -ForegroundColor Yellow
         Write-Host "└$border┘" -ForegroundColor Yellow
@@ -95,7 +95,7 @@ function Show-Error {
         [string]$message
     )
     try {
-        $border = '─' * ($message.Length + 2)
+        $border = '�' * ($message.Length)
         Write-Host "┌$border┐" -ForegroundColor Red
         Write-Host " $message " -ForegroundColor Red
         Write-Host "└$border┘" -ForegroundColor Red
@@ -807,26 +807,67 @@ function Search-OnlineForInfo ($message) {
 function Start-EventLogAnalysis {
     Show-Message "🚀 Analyzing Event Logs... Please wait..."
     try {
-        $systemLogErrors = Get-WinEvent -LogName System -FilterXPath "*[System/Level=2]" -MaxEvents 10 | ForEach-Object {
-            [PSCustomObject]@{
-                TimeCreated  = $_.TimeCreated
-                ProviderName = $_.ProviderName
-                Id           = $_.Id
-                Message      = $_.Message                
+        $systemLogCritical = @()
+        try {
+            $systemLogCritical = Get-WinEvent -LogName System -FilterXPath "*[System/Level=1]" -MaxEvents 10 | ForEach-Object {
+                [PSCustomObject]@{
+                    TimeCreated  = $_.TimeCreated
+                    ProviderName = $_.ProviderName
+                    Id           = $_.Id
+                    Message      = $_.Message                
+                }
             }
-        }            
+        }
+        catch {
+            Write-Log -logFileName "event_log_analysis" -message "No critical events found: $_" -functionName "Start-EventLogAnalysis"
+        }
 
-        Show-Message "🔥 System Log Errors (Last 10) 🔥"
-        $systemLogErrors | ForEach-Object {
-            Write-Host "============================================================" -ForegroundColor Magenta
-            Write-Host "🕒 Time Created: $($_.TimeCreated)" -ForegroundColor Cyan
-            Write-Host "🔌 Provider: $($_.ProviderName)" -ForegroundColor Cyan
-            Write-Host "🆔 Id: $($_.Id)" -ForegroundColor Cyan
-            Write-Host "💬 Message: $($_.Message)" -ForegroundColor Cyan
-            $onlineInfo = Search-OnlineForInfo -message $($_.Message)
-            Write-Host "🌐 Mitigation Info: $onlineInfo" -ForegroundColor Green
-            Write-Log -logFileName "event_log_analysis" -message "SystemLogError: TimeCreated: $($_.TimeCreated) - Provider: $($_.ProviderName) - Id: $($_.Id) - Message: $($_.Message)" -functionName "Start-EventLogAnalysis"
-        }        
+        $systemLogErrors = @()
+        try {
+            $systemLogErrors = Get-WinEvent -LogName System -FilterXPath "*[System/Level=2]" -MaxEvents 10 | ForEach-Object {
+                [PSCustomObject]@{
+                    TimeCreated  = $_.TimeCreated
+                    ProviderName = $_.ProviderName
+                    Id           = $_.Id
+                    Message      = $_.Message                
+                }
+            }
+        }
+        catch {
+            Write-Log -logFileName "event_log_analysis" -message "No error events found: $_" -functionName "Start-EventLogAnalysis"
+        }
+
+        if ($systemLogCritical.Count -gt 0) {
+            Show-Message "🚨 System Log Critical Events (Last 10) 🚨"
+            $systemLogCritical | ForEach-Object {
+                Write-Host "============================================================" -ForegroundColor Red
+                Write-Host "🕒 Time Created: $($_.TimeCreated)" -ForegroundColor Cyan
+                Write-Host "🔌 Provider: $($_.ProviderName)" -ForegroundColor Cyan
+                Write-Host "🆔 Id: $($_.Id)" -ForegroundColor Cyan
+                Write-Host "💬 Message: $($_.Message)" -ForegroundColor Cyan
+                $onlineInfo = Search-OnlineForInfo -message $($_.Message)
+                Write-Host "🌐 Mitigation Info: $onlineInfo" -ForegroundColor Green
+                Write-Log -logFileName "event_log_analysis" -message "SystemLogCritical: TimeCreated: $($_.TimeCreated) - Provider: $($_.ProviderName) - Id: $($_.Id) - Message: $($_.Message)" -functionName "Start-EventLogAnalysis"
+            }
+        } else {
+            Show-Message "No critical events found."
+        }
+
+        if ($systemLogErrors.Count -gt 0) {
+            Show-Message "🔥 System Log Errors (Last 10) 🔥"
+            $systemLogErrors | ForEach-Object {
+                Write-Host "============================================================" -ForegroundColor Magenta
+                Write-Host "🕒 Time Created: $($_.TimeCreated)" -ForegroundColor Cyan
+                Write-Host "🔌 Provider: $($_.ProviderName)" -ForegroundColor Cyan
+                Write-Host "🆔 Id: $($_.Id)" -ForegroundColor Cyan
+                Write-Host "💬 Message: $($_.Message)" -ForegroundColor Cyan
+                $onlineInfo = Search-OnlineForInfo -message $($_.Message)
+                Write-Host "🌐 Mitigation Info: $onlineInfo" -ForegroundColor Green
+                Write-Log -logFileName "event_log_analysis" -message "SystemLogError: TimeCreated: $($_.TimeCreated) - Provider: $($_.ProviderName) - Id: $($_.Id) - Message: $($_.Message)" -functionName "Start-EventLogAnalysis"
+            }
+        } else {
+            Show-Message "No error events found."
+        }
     }
     catch {
         $errorDetails = $_.Exception | Out-String

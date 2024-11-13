@@ -1,4 +1,4 @@
-![WinDragon](windragon.jpeg)
+![WinDragon](/img/windragon.jpeg)
 
 # 🐉 WinDragon Maintenance Script - vBeta
 
