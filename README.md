@@ -11,7 +11,6 @@ This script provides an interactive menu-driven interface for performing various
 
 ## 🚀 How to Run the Script
 1. Open PowerShell as an Administrator.
-   - Right-click on the Start menu and select 'Windows PowerShell (Admin)' or 'Windows Terminal (Admin)'.
 2. Navigate to the directory where this script is located.
    - Use the `cd` command to change directories. Example: `cd C:\path\to\script`
 3. Run the script by typing: `.\winDragon.ps1`

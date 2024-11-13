@@ -1,4 +1,5 @@
 # WinDragon Maintenance Script - vBeta
+# Author: Daniel Penrod
 # This script provides an interactive menu-driven interface for performing various maintenance tasks on a Windows machine.
 # Tasks include backup, repair, cleanup, drive optimization, or all tasks sequentially.
 
@@ -8,14 +9,15 @@
 
 # How to Run the Script:
 # 1. Open PowerShell as an Administrator.
-#    - Right-click on the Start menu and select 'Windows PowerShell (Admin)' or 'Windows Terminal (Admin)'.
 # 2. Navigate to the directory where this script is located.
 #    - Use the 'cd' command to change directories. Example: `cd C:\path\to\script`
 # 3. Run the script by typing: `\.\winDragon.ps1`
 # 4. Follow the interactive prompts to select the tasks you wish to perform.
 
+# Tip: It is best to run this script from a USB thumb drive to ensure that the script can access all necessary files without restrictions.
+
 # Requirements:
-# - PowerShell 5.1 or newer
+# - PowerShell 7.4.6 or newer
 # - Administrator privileges to perform system-level operations like repair, cleanup, and optimization.
 
 # Function to ensure script is running with admin privileges
