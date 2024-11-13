@@ -427,31 +427,34 @@ function Start-Backup {
 function Start-Repair {
     try {
         # DISM CheckHealth
+        Show-Message "Checking system health using DISM..."
         Start-Process -FilePath 'dism.exe' -ArgumentList '/Online', '/Cleanup-Image', '/CheckHealth' -NoNewWindow -Wait
         if ($LASTEXITCODE -ne 0) {            
             Write-Log -logFileName "repair_error_log.txt" -message "System image health check detected issues." -functionName $MyInvocation.MyCommand.Name
             # DISM ScanHealth
+            Show-Message "System scan detected issues. Attempting to repair..."
             Start-Process -FilePath 'dism.exe' -ArgumentList '/Online', '/Cleanup-Image', '/ScanHealth' -NoNewWindow -Wait
             if ($LASTEXITCODE -ne 0) {
-                Show-Message "System scan detected issues. Attempting to repair..."
                 Write-Log -logFileName "repair_error_log.txt" -message "System scan detected issues." -functionName $MyInvocation.MyCommand.Name
                 Start-Process -FilePath 'dism.exe' -ArgumentList '/Online', '/Cleanup-Image', '/RestoreHealth' -NoNewWindow -Wait
                 if ($LASTEXITCODE -ne 0) {                
                     Write-Log -logFileName "repair_error_log.txt" -message "Failed to repair system issues." -functionName $MyInvocation.MyCommand.Name
-                    Show-Message "Failed to repair system issues. Aborting further operations."
+                    Show-Error "Failed to repair system issues. Aborting further operations."
                     return "Repair tasks aborted due to failure in system repair."
                 }
             }
         }       
 
         # DISM StartComponentCleanup
+        Show-Message "Running Component Cleanup..."
         Start-Process -FilePath 'dism.exe' -ArgumentList '/Online', '/Cleanup-Image', '/StartComponentCleanup' -NoNewWindow -Wait
         if ($LASTEXITCODE -ne 0) {            
             Write-Log -logFileName "repair_error_log.txt" -message "Component cleanup failed." -functionName $MyInvocation.MyCommand.Name
-            Show-Message "Repair tasks completed with issues during component cleanup."
+            Show-Error "Repair tasks completed with issues during component cleanup."
             return "Repair tasks completed with issues during component cleanup."
         }
 
+        # Running System File Checker
         Show-Message "Running System File Checker to scan and repair protected system files..."
         try {
             $sfcProcess = Start-Process -FilePath "sfc" -ArgumentList "/SCANNOW" -NoNewWindow -Wait -PassThru
@@ -461,7 +464,7 @@ function Start-Repair {
             }
             else {               
                 Write-Log -logFileName "sfc_error_log.txt" -message "SFC finished with issues. Exit code: $($sfcProcess.ExitCode)" -functionName $MyInvocation.MyCommand.Name
-                Show-Message "SFC finished with issues. Exit code: $($sfcProcess.ExitCode)"
+                Show-Error "SFC finished with issues. Exit code: $($sfcProcess.ExitCode)"
                 return "System File Checker finished with warnings/errors. Exit code: $($sfcProcess.ExitCode)"
             }
         }
@@ -641,7 +644,7 @@ function Start-Optimization {
         catch {
             Catcher -taskName "Drive Optimization" -errorMessage $_.Exception.Message
             Write-Log -logFileName "drive_optimization_log.txt" -message "Drive optimization failed: $_" -functionName $MyInvocation.MyCommand.Name
-            return "Drive Optimization: Failed with error $_"
+            throw
         }
     }
     catch {
@@ -798,76 +801,93 @@ function Search-OnlineForInfo ($message) {
     return "$requestUrl"
 }
 
-# Function: Start-EventLogAnalysis
-# Description: This function analyzes system event logs for errors and warnings.
-#              It extracts relevant events from the System and Application logs, 
-#              and provides a summary report to the user with visually enhanced output.
+# Function: Get-EventLogEntries
+# Description: Retrieves event log entries based on the specified log name and event level.
+# Parameters:
+#   - [string]$logName: The name of the event log to query.
+#   - [int]$level: The level of events to filter (e.g., 1 for critical, 2 for error).
+#   - [int]$maxEvents: The maximum number of events to retrieve (default is 10).
+# Returns: An array of custom objects containing event log details.
+# Usage: $entries = Get-EventLogEntries -logName "System" -level 1 -maxEvents 10
+function Get-EventLogEntries {
+    param (
+        [string]$logName,
+        [int]$level,
+        [int]$maxEvents = 10
+    )
+    try {      
+        
+        $events = Get-WinEvent -LogName System -FilterXPath "*[System/Level=$level]" -MaxEvents $maxEvents | ForEach-Object {
+            [PSCustomObject]@{
+                TimeCreated  = $_.TimeCreated
+                ProviderName = $_.ProviderName
+                Id           = $_.Id
+                Message      = $_.Message                
+            }
+        }
+        
+        if ($events) {
+            return $events
+        }
+        else {
+            Write-Log -logFileName "event_log_analysis" -message "No events found for level $level in $logName." -functionName "Get-EventLogEntries"
+            return @()
+        }
+    }
+    catch {
+        Write-Log -logFileName "event_log_analysis" -message "Error querying events for level $level in ${logName}: $_" -functionName "Get-EventLogEntries"
+        return @()
+    }
+}
+
+
+# Function: Show-EventLogEntries
+# Description: Displays event log entries with detailed information and logs the analysis.
+# Parameters:
+#   - [string]$title: The title to display before showing the event log entries.
+#   - [array]$entries: An array of event log entries to display.
+#   - [string]$color: The color to use for displaying the event log entries.
 # Usage:
+#   $entries = Get-EventLogEntries -logName "Application" -level 2 -maxEvents 10
+#   Show-EventLogEntries -title "Recent Application Events" -entries $entries -color Yellow
+function Show-EventLogEntries {
+    param (
+        [string]$title,
+        [array]$entries,
+        [string]$color
+    )
+    if ($entries.Count -gt 0) {
+        Show-Message $title
+        $entries | ForEach-Object {
+            Write-Host "============================================================" -ForegroundColor $color
+            Write-Host "🕒 Time Created: $($_.TimeCreated)" -ForegroundColor Cyan
+            Write-Host "🔌 Provider: $($_.ProviderName)" -ForegroundColor Cyan
+            Write-Host "🆔 Id: $($_.Id)" -ForegroundColor Cyan
+            Write-Host "💬 Message: $($_.Message)" -ForegroundColor Cyan
+            $onlineInfo = Search-OnlineForInfo -message $($_.Message)
+            Write-Host "🌐 Mitigation Info: $onlineInfo" -ForegroundColor Green
+            Write-Log -logFileName "event_log_analysis" -message "${title}: TimeCreated: $($_.TimeCreated) - Provider: $($_.ProviderName) - Id: $($_.Id) - Message: $($_.Message)" -functionName "Show-EventLogEntries"
+        }
+    }
+    else {
+        Show-Message "No events found for $title."
+    }
+}
+
+# Function: Start-EventLogAnalysis
+# Description: Analyzes the system event logs for critical events and errors.
+#              Retrieves critical and error events from the system event log and displays them.
+#              If an error occurs during the analysis, it logs the error details and shows an error message.
+# Parameters: None
+# Usage: Start-EventLogAnalysis
+# Example:
 #   Start-EventLogAnalysis
+#   This command starts the analysis of the system event logs and displays the critical and error events.
 function Start-EventLogAnalysis {
     Show-Message "🚀 Analyzing Event Logs... Please wait..."
     try {
-        $systemLogCritical = @()
-        try {
-            $systemLogCritical = Get-WinEvent -LogName System -FilterXPath "*[System/Level=1]" -MaxEvents 10 | ForEach-Object {
-                [PSCustomObject]@{
-                    TimeCreated  = $_.TimeCreated
-                    ProviderName = $_.ProviderName
-                    Id           = $_.Id
-                    Message      = $_.Message                
-                }
-            }
-        }
-        catch {
-            Write-Log -logFileName "event_log_analysis" -message "No critical events found: $_" -functionName "Start-EventLogAnalysis"
-        }
-
-        $systemLogErrors = @()
-        try {
-            $systemLogErrors = Get-WinEvent -LogName System -FilterXPath "*[System/Level=2]" -MaxEvents 10 | ForEach-Object {
-                [PSCustomObject]@{
-                    TimeCreated  = $_.TimeCreated
-                    ProviderName = $_.ProviderName
-                    Id           = $_.Id
-                    Message      = $_.Message                
-                }
-            }
-        }
-        catch {
-            Write-Log -logFileName "event_log_analysis" -message "No error events found: $_" -functionName "Start-EventLogAnalysis"
-        }
-
-        if ($systemLogCritical.Count -gt 0) {
-            Show-Message "🚨 System Log Critical Events (Last 10) 🚨"
-            $systemLogCritical | ForEach-Object {
-                Write-Host "============================================================" -ForegroundColor Red
-                Write-Host "🕒 Time Created: $($_.TimeCreated)" -ForegroundColor Cyan
-                Write-Host "🔌 Provider: $($_.ProviderName)" -ForegroundColor Cyan
-                Write-Host "🆔 Id: $($_.Id)" -ForegroundColor Cyan
-                Write-Host "💬 Message: $($_.Message)" -ForegroundColor Cyan
-                $onlineInfo = Search-OnlineForInfo -message $($_.Message)
-                Write-Host "🌐 Mitigation Info: $onlineInfo" -ForegroundColor Green
-                Write-Log -logFileName "event_log_analysis" -message "SystemLogCritical: TimeCreated: $($_.TimeCreated) - Provider: $($_.ProviderName) - Id: $($_.Id) - Message: $($_.Message)" -functionName "Start-EventLogAnalysis"
-            }
-        } else {
-            Show-Message "No critical events found."
-        }
-
-        if ($systemLogErrors.Count -gt 0) {
-            Show-Message "🔥 System Log Errors (Last 10) 🔥"
-            $systemLogErrors | ForEach-Object {
-                Write-Host "============================================================" -ForegroundColor Magenta
-                Write-Host "🕒 Time Created: $($_.TimeCreated)" -ForegroundColor Cyan
-                Write-Host "🔌 Provider: $($_.ProviderName)" -ForegroundColor Cyan
-                Write-Host "🆔 Id: $($_.Id)" -ForegroundColor Cyan
-                Write-Host "💬 Message: $($_.Message)" -ForegroundColor Cyan
-                $onlineInfo = Search-OnlineForInfo -message $($_.Message)
-                Write-Host "🌐 Mitigation Info: $onlineInfo" -ForegroundColor Green
-                Write-Log -logFileName "event_log_analysis" -message "SystemLogError: TimeCreated: $($_.TimeCreated) - Provider: $($_.ProviderName) - Id: $($_.Id) - Message: $($_.Message)" -functionName "Start-EventLogAnalysis"
-            }
-        } else {
-            Show-Message "No error events found."
-        }
+        $systemLogErrors = Get-EventLogEntries -logName "System" -level 2 -maxEvents 10
+        Show-EventLogEntries -title "🔥 System Log Errors (Last 10) 🔥" -entries $systemLogErrors -color "Magenta"
     }
     catch {
         $errorDetails = $_.Exception | Out-String
