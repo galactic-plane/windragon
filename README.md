@@ -13,7 +13,7 @@ This script provides an interactive menu-driven interface for performing various
 1. Open PowerShell as an Administrator.
 2. Navigate to the directory where this script is located.
    - Use the `cd` command to change directories. Example: `cd C:\path\to\script`
-3. Run the script by typing: `.\winDragon.ps1`
+3. Run the script by typing: `.\WinDragon.ps1`
 4. Follow the interactive prompts to select the tasks you wish to perform.
 
 **Tip:** It is best to run this script from a USB thumb drive to ensure that the script can access all necessary files without restrictions.
