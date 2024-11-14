@@ -138,81 +138,66 @@ function Show-Menu {
 # Import the Utils Module
 . .\Modules\Utils.ps1
 #####################################
-
-# Create a settings file for default paths
-# Initialize-Settings
-# Handles errors by throwing an exception if the task name is null or empty.
-# Catcher
-# Function to log messages to a log file in a dated folder
-# Write-Log
-# Function to run a virus scan using Windows Defender based on the current status
-# Start-DefenderScan
+# Utility functions for various common tasks:
+# - Initialize-Settings: Creates a settings file for default paths.
+# - Catcher: Handles errors by throwing an exception if the task name is null or empty.
+# - Write-Log: Logs messages to a log file in a dated folder.
+# - Start-DefenderScan: Runs a virus scan using Windows Defender based on the current status.
 
 #####################################
 # Import the Backup Module
 . .\Modules\Backup.ps1
 #####################################
-
-# This function prompts the user to enter the source and destination directories for a backup operation.
-# Get-BackupPaths
-# This function initiates a backup operation using Robocopy to copy files from a source directory to a destination directory.
-# Start-Backup
+# Functions for backup operations:
+# - Get-BackupPaths: Prompts the user to enter the source and destination directories for a backup operation.
+# - Start-Backup: Initiates a backup operation using Robocopy to copy files from a source directory to a destination directory.
 
 #####################################
 # Import the Repair Module
 . .\Modules\Repair.ps1
 #####################################
-
-# This function performs a series of system repair tasks using various system tools.
-# Start-Repair
+# Functions for system repair tasks:
+# - Start-Repair: Performs a series of system repair tasks using various system tools (e.g., DISM and SFC).
 
 #####################################
 # Import the Update Module
 . .\Modules\Update.ps1
 #####################################
-
-# This function installs WinGet if it is not already installed or if the installed version is outdated.
-# Start-WinGetUpdate
+# Functions for updating installed software:
+# - Start-WinGetUpdate: Installs WinGet if it is not already installed or if the installed version is outdated, and updates all installed packages.
 
 #####################################
 # Import the Cleanup Module
 . .\Modules\Cleanup.ps1
 #####################################
-
-# This function executes an advanced disk cleanup using the built-in Windows tool.
-# Start-Cleanup
+# Functions for system cleanup tasks:
+# - Start-Cleanup: Executes an advanced disk cleanup using the built-in Windows tool.
 
 #####################################
 # Import the Optimize Module
 . .\Modules\Optimize.ps1
 #####################################
-
-# This function performs disk optimization on all physical drives detected by the system.
-# Start-Optimization
+# Functions for disk optimization:
+# - Start-Optimization: Performs disk optimization on all physical drives detected by the system.
 
 #####################################
 # Import the SysInfo Module
 . .\Modules\SysInfo.ps1
 #####################################
-
-# This function collects and displays detailed information about the computer's hardware and system configuration.
-# Start-PCInfo
+# Functions for collecting system information:
+# - Start-PCInfo: Collects and displays detailed information about the computer's hardware and system configuration.
 
 #####################################
 # Import the SysEvents Module
 . .\Modules\SysEvents.ps1
 #####################################
-
-# This function takes a message string and generates a Bing search URL for the given information.
-# Search-OnlineForInfo
-# Retrieves event log entries based on the specified log name and event level.
-# Get-EventLogEntries
-# Displays event log entries with detailed information and logs the analysis.
-# Show-EventLogEntries
-# Analyzes the system event logs for critical events and errors.
-# Start-EventLogAnalysis
-
+# Functions for event log analysis:
+# - Search-OnlineForInfo: Takes a message string and generates a Bing search URL for the given information.
+# - Get-EventLogEntries: Retrieves event log entries based on the specified log name and event level.
+# - Show-EventLogEntries: Displays event log entries with detailed information and logs the analysis.
+# - Start-EventLogAnalysis: Analyzes the system event logs for critical events and errors.
 #####################################
+
 Clear-Host
 
 # Display the ASCII dragon
