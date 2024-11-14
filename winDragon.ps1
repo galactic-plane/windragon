@@ -14,8 +14,6 @@
 # 3. Run the script by typing: `\.\WinDragon.ps1`
 # 4. Follow the interactive prompts to select the tasks you wish to perform.
 
-# Tip: It is best to run this script from a USB thumb drive to ensure that the script can access all necessary files without restrictions.
-
 # Requirements:
 # - PowerShell 7.4.6 or newer
 # - Administrator privileges to perform system-level operations like repair, cleanup, and optimization.
