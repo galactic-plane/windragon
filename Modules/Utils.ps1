@@ -24,7 +24,7 @@ function Initialize-Settings {
     if (-not (Test-Path $settingsFilePath)) {
         $defaultSettings = @{
             defaultSource      = "D:\\"
-            defaultDestination = "B:\\"
+            defaultDestination = "B:\\DayAfter"
         }
         ($defaultSettings | ConvertTo-Json -Depth 3) | Set-Content -Path $settingsFilePath
         Write-Host "Settings file created at $settingsFilePath with default values."
