@@ -12,15 +12,15 @@ function Start-Repair {
         Show-Message "Checking system health using DISM..."
         Start-Process -FilePath 'dism.exe' -ArgumentList '/Online', '/Cleanup-Image', '/CheckHealth' -NoNewWindow -Wait
         if ($LASTEXITCODE -ne 0) {            
-            Write-Log -logFileName "repair_error_log.txt" -message "System image health check detected issues." -functionName $MyInvocation.MyCommand.Name
+            Write-Log -logFileName "repair_log_errors" -message "System image health check detected issues." -functionName $MyInvocation.MyCommand.Name
             # DISM ScanHealth
             Show-Message "System scan detected issues. Attempting to repair..."
             Start-Process -FilePath 'dism.exe' -ArgumentList '/Online', '/Cleanup-Image', '/ScanHealth' -NoNewWindow -Wait
             if ($LASTEXITCODE -ne 0) {
-                Write-Log -logFileName "repair_error_log.txt" -message "System scan detected issues." -functionName $MyInvocation.MyCommand.Name
+                Write-Log -logFileName "repair_log_errors" -message "System scan detected issues." -functionName $MyInvocation.MyCommand.Name
                 Start-Process -FilePath 'dism.exe' -ArgumentList '/Online', '/Cleanup-Image', '/RestoreHealth' -NoNewWindow -Wait
                 if ($LASTEXITCODE -ne 0) {                
-                    Write-Log -logFileName "repair_error_log.txt" -message "Failed to repair system issues." -functionName $MyInvocation.MyCommand.Name
+                    Write-Log -logFileName "repair_log_errors" -message "Failed to repair system issues." -functionName $MyInvocation.MyCommand.Name
                     Show-Error "Failed to repair system issues. Aborting further operations."
                     return "Repair tasks aborted due to failure in system repair."
                 }
@@ -31,7 +31,7 @@ function Start-Repair {
         Show-Message "Running Component Cleanup..."
         Start-Process -FilePath 'dism.exe' -ArgumentList '/Online', '/Cleanup-Image', '/StartComponentCleanup' -NoNewWindow -Wait
         if ($LASTEXITCODE -ne 0) {            
-            Write-Log -logFileName "repair_error_log.txt" -message "Component cleanup failed." -functionName $MyInvocation.MyCommand.Name
+            Write-Log -logFileName "repair_log_errors" -message "Component cleanup failed." -functionName $MyInvocation.MyCommand.Name
             Show-Error "Repair tasks completed with issues during component cleanup."
             return "Repair tasks completed with issues during component cleanup."
         }
@@ -45,7 +45,7 @@ function Start-Repair {
                 return "System File Checker has completed successfully."
             }
             else {               
-                Write-Log -logFileName "sfc_error_log.txt" -message "SFC finished with issues. Exit code: $($sfcProcess.ExitCode)" -functionName $MyInvocation.MyCommand.Name
+                Write-Log -logFileName "sfc_log_errors" -message "SFC finished with issues. Exit code: $($sfcProcess.ExitCode)" -functionName $MyInvocation.MyCommand.Name
                 Show-Error "SFC finished with issues. Exit code: $($sfcProcess.ExitCode)"
                 return "System File Checker finished with warnings/errors. Exit code: $($sfcProcess.ExitCode)"
             }
@@ -53,14 +53,14 @@ function Start-Repair {
         catch {
             $errorDetails = $_.Exception | Out-String            
             Catcher -taskName "Repair Tasks" -errorMessage $errorDetails
-            Write-Log -logFileName "sfc_error_log.txt" -message "System File Checker failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
+            Write-Log -logFileName "sfc_log_errors" -message "System File Checker failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
             Show-Error "System File Checker failed. Please check the log file for more details."
             return "System File Checker failed. Please check the log file for more details."
         }
     }
     catch {
         $errorDetails = $_.Exception | Out-String        
-        Write-Log -logFileName "repair_error_log.txt" -message "Repair tasks failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
+        Write-Log -logFileName "repair_log_errors" -message "Repair tasks failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
         Catcher -taskName "Repair Tasks" -errorMessage $_.Exception.Message
         Show-Error "Repair tasks failed. Please check the log file for more details."
         return "Repair tasks failed. Please check the log file for more details."

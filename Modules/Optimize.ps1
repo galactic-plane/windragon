@@ -15,7 +15,7 @@
 function Start-Optimization {
     try {
         Show-Message "Optimizing drives..."
-        Write-Log -logFileName "drive_optimization_log.txt" -message "Starting drive optimization process." -functionName $MyInvocation.MyCommand.Name
+        Write-Log -logFileName "drive_optimization_log" -message "Starting drive optimization process." -functionName $MyInvocation.MyCommand.Name
         try {
             # Get the physical disks and filter to only those with known MediaType
             $disks = Get-PhysicalDisk | Where-Object { $_.MediaType -ne "Unspecified" }
@@ -23,7 +23,7 @@ function Start-Optimization {
             # Handle the case where no disks are found
             if ($disks.Count -eq 0) {
                 Write-Output "No physical disks found for optimization. Exiting."
-                Write-Log -logFileName "drive_optimization_log.txt" -message "No physical disks found for optimization. Exiting." -functionName $MyInvocation.MyCommand.Name
+                Write-Log -logFileName "drive_optimization_log" -message "No physical disks found for optimization. Exiting." -functionName $MyInvocation.MyCommand.Name
                 return "No physical disks found for optimization. Exiting."
             }
 
@@ -34,28 +34,28 @@ function Start-Optimization {
                     # If the MediaType is SSD, run an Optimize-Volume with the Trim option
                     if ($disk.MediaType -eq "SSD") {
                         Write-Output "Running TRIM on SSD: $($disk.FriendlyName)"
-                        Write-Log -logFileName "drive_optimization_log.txt" -message "Running TRIM on SSD: $($disk.FriendlyName)" -functionName $MyInvocation.MyCommand.Name
+                        Write-Log -logFileName "drive_optimization_log" -message "Running TRIM on SSD: $($disk.FriendlyName)" -functionName $MyInvocation.MyCommand.Name
                         try {
                             Optimize-Volume -DriveLetter $partition.DriveLetter -ReTrim -Verbose
-                            Write-Log -logFileName "drive_optimization_log.txt" -message "Successfully optimized SSD: $($disk.FriendlyName)" -functionName $MyInvocation.MyCommand.Name
+                            Write-Log -logFileName "drive_optimization_log" -message "Successfully optimized SSD: $($disk.FriendlyName)" -functionName $MyInvocation.MyCommand.Name
                         }
                         catch {
                             Show-Error "Failed to optimize SSD: $($disk.FriendlyName). Error: $_"
-                            Write-Log -logFileName "drive_optimization_log.txt" -message "Failed to optimize SSD: $($disk.FriendlyName). Error: $_" -functionName $MyInvocation.MyCommand.Name
+                            Write-Log -logFileName "drive_optimization_log_errors" -message "Failed to optimize SSD: $($disk.FriendlyName). Error: $_" -functionName $MyInvocation.MyCommand.Name
                             Catcher -taskName "SSD Optimization" -errorMessage $_.Exception.Message
                         }
                     }
                     # If the MediaType is HDD, run a defragmentation operation
                     elseif ($disk.MediaType -eq "HDD") {
                         Write-Output "Running Defrag on HDD: $($disk.FriendlyName)"
-                        Write-Log -logFileName "drive_optimization_log.txt" -message "Running Defrag on HDD: $($disk.FriendlyName)"
+                        Write-Log -logFileName "drive_optimization_log" -message "Running Defrag on HDD: $($disk.FriendlyName)"
                         try {
                             Optimize-Volume -DriveLetter $partition.DriveLetter -Defrag -Verbose
-                            Write-Log -logFileName "drive_optimization_log.txt" -message "Successfully defragmented HDD: $($disk.FriendlyName)" -functionName $MyInvocation.MyCommand.Name
+                            Write-Log -logFileName "drive_optimization_log" -message "Successfully defragmented HDD: $($disk.FriendlyName)" -functionName $MyInvocation.MyCommand.Name
                         }
                         catch {
                             Show-Error "Failed to defragment HDD: $($disk.FriendlyName). Error: $_"
-                            Write-Log -logFileName "drive_optimization_log.txt" -message "Failed to defragment HDD: $($disk.FriendlyName). Error: $_" -functionName $MyInvocation.MyCommand.Name
+                            Write-Log -logFileName "drive_optimization_log_errors" -message "Failed to defragment HDD: $($disk.FriendlyName). Error: $_" -functionName $MyInvocation.MyCommand.Name
                             Catcher -taskName "HDD Defragmentation" -errorMessage $_.Exception.Message
                         }
                     }
@@ -64,20 +64,20 @@ function Start-Optimization {
                     # Log additional context information for skipped disks
                     $reason = "Disk is either unmounted or inaccessible."
                     Write-Output "Skipping optimization on unmounted or inaccessible disk: $($disk.FriendlyName). Reason: $reason"
-                    Write-Log -logFileName "drive_optimization_log.txt" -message "Skipped disk: $($disk.FriendlyName). Reason: $reason" -functionName $MyInvocation.MyCommand.Name
+                    Write-Log -logFileName "drive_optimization_log" -message "Skipped disk: $($disk.FriendlyName). Reason: $reason" -functionName $MyInvocation.MyCommand.Name
                 }
             }
             return "Optimization Completed. Exiting."
         }
         catch {
             Catcher -taskName "Drive Optimization" -errorMessage $_.Exception.Message
-            Write-Log -logFileName "drive_optimization_log.txt" -message "Drive optimization failed: $_" -functionName $MyInvocation.MyCommand.Name
+            Write-Log -logFileName "drive_optimization_log_errors" -message "Drive optimization failed: $_" -functionName $MyInvocation.MyCommand.Name
             throw
         }
     }
     catch {
         Catcher -taskName "Drive Optimization" -errorMessage $_.Exception.Message
-        Write-Log -logFileName "drive_optimization_log.txt" -message "Drive optimization process encountered an unexpected error: $_" -functionName $MyInvocation.MyCommand.Name
+        Write-Log -logFileName "drive_optimization_log_errors" -message "Drive optimization process encountered an unexpected error: $_" -functionName $MyInvocation.MyCommand.Name
         return "Drive Optimization: Failed with error $_"
     }
 }

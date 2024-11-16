@@ -58,7 +58,7 @@ function Catcher {
         Task  = $taskName
         Error = $errorMessage
     }
-    Write-Log -logFileName 'error_log.txt' -message "Error in task: $taskName - $errorMessage" -functionName $taskName
+    Write-Log -logFileName 'error_log' -message "Error in task: $taskName - $errorMessage" -functionName $taskName
 }
 
 # Function to log messages to a log file in a dated folder
@@ -71,7 +71,7 @@ function Catcher {
 #   [string]$message - The message to be logged.
 #   [string]$functionName - The name of the function calling Write-Log.
 # Usage:
-#   Write-Log -logFileName "repair_log.txt" -message "Repair task started successfully." -functionName "Start-Repair"
+#   Write-Log -logFileName "repair_log" -message "Repair task started successfully." -functionName "Start-Repair"
 function Write-Log {
     param (
         [string]$logFileName,
@@ -86,17 +86,14 @@ function Write-Log {
             New-Item -ItemType Directory -Path $logDirectory -ErrorAction Stop | Out-Null
         }
         catch [System.UnauthorizedAccessException] {
-            Catcher -taskName "Write-Log" -errorMessage $_.Exception.Message
             Show-Error "Failed to create log directory '$logDirectory' due to insufficient permissions. Please check permissions."
             return
         }
         catch [System.IO.IOException] {
-            Catcher -taskName "Write-Log" -errorMessage $_.Exception.Message
             Show-Error "Failed to create log directory '$logDirectory' due to an I/O error. Please verify the path and ensure there are no conflicts."
             return
         }
         catch {
-            Catcher -taskName "Write-Log" -errorMessage $_.Exception.Message
             Show-Error "Failed to create log directory '$logDirectory' due to an unexpected error: $_.Exception.Message"
             return
         }
@@ -176,7 +173,7 @@ function Start-DefenderScan {
         }
     }
 
-    Write-Log -logFileName "defender_scan_log.txt" -message "Windows Defender ran a scan based on current status" -functionName $MyInvocation.MyCommand.Name
+    Write-Log -logFileName "defender_scan_log" -message "Windows Defender ran a scan based on current status" -functionName $MyInvocation.MyCommand.Name
 }
 
 # This function displays a progress bar while executing a series of tasks sequentially.
@@ -205,18 +202,28 @@ function Show-ProgressBar {
     )
 
     $totalSteps = $Tasks.Count # Determine the total number of steps based on the task count
+    $startTime = Get-Date # Record the start time to estimate remaining time
 
     for ($i = 0; $i -lt $totalSteps; $i++) {
-        $percentComplete = (($i + 1) / $totalSteps) * 100 # Calculate the percentage complete
+        $elapsedTime = (Get-Date) - $startTime # Calculate elapsed time
+        $averageTimePerTask = if ($i -eq 0) { $DelayBetweenTasks } else { $elapsedTime.TotalSeconds / $i } # Use delay as initial estimate for average time per task
+        $estimatedRemainingTime = [timespan]::FromSeconds($averageTimePerTask * ($totalSteps - $i)) # Estimate remaining time
 
-   
-        # Update the progress bar
+        $percentComplete = [math]::Round((($i + 1) / $totalSteps) * 100, 2) # Calculate the percentage complete and round to 2 decimal places
+
+        # Update the progress bar with the current status
         Write-Progress -Activity 'Executing Tasks' `
-            -Status "Executing Task $($i + 1) of $totalSteps" `
+            -Status "Executing Task $($i + 1) of $totalSteps - Estimated Time Remaining: $([math]::Round($estimatedRemainingTime.TotalSeconds, 0)) seconds" `
             -PercentComplete $percentComplete
 
-        # Execute the current task
-        & $Tasks[$i]
+        # Execute the current task with error handling
+        try {
+            & $Tasks[$i]
+        }
+        catch {
+            Write-Log -logFileName "task_errors" -message "Task $($i + 1) failed: $_" -functionName $MyInvocation.MyCommand.Name
+            Write-Error "Task $($i + 1) failed: $_"
+        }
 
         # Delay and clear screen after each task, but keep progress bar at the top
         if ($i -lt ($totalSteps - 1)) {

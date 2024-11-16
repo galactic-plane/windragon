@@ -20,7 +20,7 @@ function Start-PCInfo {
     $basicInfo | ForEach-Object {
         $_ | Format-List | Out-String | ForEach-Object {
             Write-Host $_ -ForegroundColor White
-            Write-Log -logFileName "SystemInfoLog" -message "BasicSystemInfo: $_" -functionName "Get-ComputerInfo"
+            Write-Log -logFileName "system_info_log" -message "BasicSystemInfo: $_" -functionName "Get-ComputerInfo"
         }
     }
 
@@ -32,7 +32,7 @@ function Start-PCInfo {
     $cpuInfo | ForEach-Object {
         $_ | Format-List | Out-String | ForEach-Object {
             Write-Host $_ -ForegroundColor Yellow
-            Write-Log -logFileName "SystemInfoLog" -message "CPUInfo: $_" -functionName "Get-CimInstance (CPU)"
+            Write-Log -logFileName "system_info_log" -message "CPUInfo: $_" -functionName "Get-CimInstance (CPU)"
         }
     }
 
@@ -44,7 +44,7 @@ function Start-PCInfo {
     $memoryInfo | ForEach-Object {
         $_ | Format-List | Out-String | ForEach-Object {
             Write-Host $_ -ForegroundColor Green
-            Write-Log -logFileName "SystemInfoLog" -message "MemoryInfo: $_" -functionName "Get-CimInstance (Memory)"
+            Write-Log -logFileName "system_info_log" -message "MemoryInfo: $_" -functionName "Get-CimInstance (Memory)"
         }
     }
 
@@ -56,7 +56,7 @@ function Start-PCInfo {
     $diskInfo | ForEach-Object {
         $_ | Format-List | Out-String | ForEach-Object {
             Write-Host $_ -ForegroundColor Cyan
-            Write-Log -logFileName "SystemInfoLog" -message "DiskInfo: $_" -functionName "Get-CimInstance (Disk)"
+            Write-Log -logFileName "system_info_log" -message "DiskInfo: $_" -functionName "Get-CimInstance (Disk)"
         }
     }
 
@@ -68,7 +68,7 @@ function Start-PCInfo {
     $networkInfo | ForEach-Object {
         $_ | Format-List | Out-String | ForEach-Object {
             Write-Host $_ -ForegroundColor Gray
-            Write-Log -logFileName "SystemInfoLog" -message "NetworkInfo: $_" -functionName "Get-NetAdapter (Network)"
+            Write-Log -logFileName "system_info_log" -message "NetworkInfo: $_" -functionName "Get-NetAdapter (Network)"
         }
     }
 
@@ -80,7 +80,7 @@ function Start-PCInfo {
     $osInfo | ForEach-Object {
         $_ | Format-List | Out-String | ForEach-Object {
             Write-Host $_ -ForegroundColor White
-            Write-Log -logFileName "SystemInfoLog" -message "OSInfo: $_" -functionName "Get-CimInstance (OS)"
+            Write-Log -logFileName "system_info_log" -message "OSInfo: $_" -functionName "Get-CimInstance (OS)"
         }
     }
 
@@ -92,7 +92,7 @@ function Start-PCInfo {
     $biosInfo | ForEach-Object {
         $_ | Format-List | Out-String | ForEach-Object {
             Write-Host $_ -ForegroundColor Yellow
-            Write-Log -logFileName "SystemInfoLog" -message "BIOSInfo: $_" -functionName "Get-CimInstance (BIOS)"
+            Write-Log -logFileName "system_info_log" -message "BIOSInfo: $_" -functionName "Get-CimInstance (BIOS)"
         }
     }
 
@@ -104,7 +104,7 @@ function Start-PCInfo {
     $gpuInfo | ForEach-Object {
         $_ | Format-List | Out-String | ForEach-Object {
             Write-Host $_ -ForegroundColor Blue
-            Write-Log -logFileName "SystemInfoLog" -message "GPUInfo: $_" -functionName "Get-CimInstance (GPU)"
+            Write-Log -logFileName "system_info_log" -message "GPUInfo: $_" -functionName "Get-CimInstance (GPU)"
         }
     }
 

@@ -9,7 +9,7 @@ function Start-Cleanup {
     try { 
         Show-Message "Starting System Cleanup..."
         # Run advanced disk cleanup using Windows Clean Manager
-        Write-Log -logFileName "cleanup_log.txt" -message "Running advanced disk cleanup with preconfigured options..." -functionName $MyInvocation.MyCommand.Name
+        Write-Log -logFileName "cleanup_log" -message "Running advanced disk cleanup with preconfigured options..." -functionName $MyInvocation.MyCommand.Name
         try {
             # Start the Clean Manager tool with the specified options
             Start-Process -FilePath "cleanmgr.exe" -ArgumentList "/sagerun:1"            
@@ -17,14 +17,14 @@ function Start-Cleanup {
             # Wait for the cleanup processes to complete
             Get-Process -Name cleanmgr, dismhost -ErrorAction SilentlyContinue | Wait-Process
 
-            Write-Log -logFileName "cleanup_log.txt" -message "Advanced disk cleanup complete." -functionName $MyInvocation.MyCommand.Name
+            Write-Log -logFileName "cleanup_log" -message "Advanced disk cleanup complete." -functionName $MyInvocation.MyCommand.Name
             Show-Message "System Cleanup Completed..."
             return "Advanced disk cleanup complete."    
         }
         catch {
             # Log the error if advanced disk cleanup fails
             Catcher -taskName "Start-Cleanup" -errorMessage $_.Exception.Message
-            Write-Log -logFileName "cleanup_log.txt" -message "Advanced disk cleanup failed: $_" -functionName $MyInvocation.MyCommand.Name
+            Write-Log -logFileName "cleanup_log" -message "Advanced disk cleanup failed: $_" -functionName $MyInvocation.MyCommand.Name
             Show-Error "System Cleanup Failed..."
             return "Advanced disk cleanup failed: $_"
         }
@@ -32,7 +32,7 @@ function Start-Cleanup {
     catch {
         # Catch any unexpected errors during the cleanup process
         Catcher -taskName "Start-Cleanup" -errorMessage $_.Exception.Message
-        Write-Log -logFileName "cleanup_log.txt" -message "Cleanup tasks failed: $_" -functionName $MyInvocation.MyCommand.Name
+        Write-Log -logFileName "cleanup_log_errors" -message "Cleanup tasks failed: $_" -functionName $MyInvocation.MyCommand.Name
         Show-Error "System Cleanup Failed..."
         return "Cleanup tasks failed: $_"
     }

@@ -64,7 +64,7 @@ function Get-EventLogEntries {
         }
     }
     catch {
-        Write-Log -logFileName "event_log_analysis" -message "Error querying events for level $level in ${logName}: $_" -functionName "Get-EventLogEntries"
+        Write-Log -logFileName "event_log_analysis_errors" -message "Error querying events for level $level in ${logName}: $_" -functionName "Get-EventLogEntries"
         return @()
     }
 }
@@ -120,7 +120,7 @@ function Start-EventLogAnalysis {
     }
     catch {
         $errorDetails = $_.Exception | Out-String
-        Write-Log -logFileName "event_log_analysis" -message "❌ Event log analysis failed: $errorDetails" -functionName "Start-EventLogAnalysis"
+        Write-Log -logFileName "event_log_analysis_errors" -message "❌ Event log analysis failed: $errorDetails" -functionName "Start-EventLogAnalysis"
         Catcher -taskName "Event Log Analysis" -errorMessage $_.Exception.Message
         Show-Error "❌ Event log analysis failed. Please check the log file for more details."
     }

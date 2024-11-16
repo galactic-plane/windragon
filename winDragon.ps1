@@ -198,9 +198,106 @@ function Show-Menu {
     return $choice
 }
 
-Clear-Host
+function Initialize-Tasks {
+    param (
+        [string]$choice,
+        [string]$source = "",
+        [string]$destination = ""
+    )
+    $tasks = @()
+    switch ($choice) {
+        "1" {
+            $tasks = @(
+                { Write-Host "Mirror Backup selected." },
+                { Write-Host "Perform Pre-Backup Tasks" },
+                { Start-DefenderScan -ScanType QuickScan },
+                { Write-Host "Performing Mirror Backup." },
+                { $operationStatus += Start-Backup -source $source -destination $destination }
+            )
+        }
+        "2" {
+            $tasks = @(
+                { Write-Host "Repair tasks selected." },
+                { Write-Host "Perform Pre-Repair Tasks" },
+                { Start-DefenderScan },
+                { $operationStatus += Start-Repair }
+            )
+        }
+        "3" {
+            $tasks = @(
+                { Write-Host "Update Apps tasks selected." },
+                { Write-Host "Perform Pre-UpdateApps Tasks" },
+                { Start-DefenderScan },
+                { $operationStatus += Start-WinGetUpdate }
+            )
+        }
+        "4" {
+            $tasks = @(                
+                { Write-Host "Cleanup tasks selected." },
+                { Write-Host "Perform Pre-Cleanup Tasks" },
+                { Start-DefenderScan },
+                { $operationStatus += Start-Cleanup }
+            )
+        }
+        "5" {
+            $tasks = @(                
+                { Write-Host "Drive optimization selected." },
+                { Write-Host "Perform Pre-Optimization Tasks" },
+                { Start-DefenderScan },
+                { $operationStatus += Start-Optimization }
+            )
+        }
+        "6" {
+            $tasks = @(                
+                { Write-Host "Getting Computer Information" },
+                { Start-PCInfo }
+            )
+        }
+        "7" {
+            $tasks = @(                
+                { Write-Host "Analyzing Event Logs..." },
+                { Start-EventLogAnalysis }
+            )
+        }
+        "8" {
+            $tasks = @(                
+                { Write-Host "Performing all tasks (Except Mirror Backup)." },
+                { Write-Host "Perform Pre-Operation Tasks" },
+                { Start-DefenderScan },
+                { $operationStatus += Start-Repair },
+                { $operationStatus += Start-WinGetUpdate },
+                { $operationStatus += Start-Cleanup },
+                { $operationStatus += Start-Optimization },
+                { Start-PCInfo },
+                { Start-EventLogAnalysis }
+            )
+        }
+        "9" {
+            $tasks = @(                
+                { Write-Host "Performing all tasks." },
+                { Write-Host "Perform Pre-Operation Tasks" },
+                { Start-DefenderScan },
+                { Start-Backup -source $source -destination $destination },
+                { $operationStatus += Start-Repair },
+                { $operationStatus += Start-WinGetUpdate },
+                { $operationStatus += Start-Cleanup },
+                { $operationStatus += Start-Optimization },
+                { Start-PCInfo },
+                { Start-EventLogAnalysis }
+            )
+        }
+        "10" {
+            Clear-Host
+            exit
+        }
+        default {
+            Write-Host "Invalid selection. Please choose an option from the menu."
+        }
+    }
+    return $tasks
+}
 
-# Display the ASCII dragon
+Clear-Host
 Show-Dragon
 
 Write-Host "`n"
@@ -215,140 +312,40 @@ if ($confirmation -ne 'Y') {
 }
 
 # Main script loop
-do {    
-    #Reset
+do {
+
     $global:ErrorRecords = @()
     $operationStatus = @()
 
-    Clear-Host
-
     $choice = Show-Menu
 
-    switch ($choice) {
-        "1" {
-            $paths = Get-BackupPaths
-            $source = $paths[0]
-            $destination = $paths[1]
-            $tasks = @(
-                { Write-Host "Mirror Backup selected." },
-                { Write-Host "Perform Pre-Backup Tasks" },
-                { Start-DefenderScan -ScanType QuickScan },
-                { Write-Host "Performing Mirror Backup." },
-                { $operationStatus += Start-Backup -source $source -destination $destination }
-            )
-            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
-        }
-        "2" {
-            $tasks = @(
-                { Write-Host "Repair tasks selected." },
-                { Write-Host "Perform Pre-Repair Tasks" },
-                { Start-DefenderScan },
-                { $operationStatus += Start-Repair }
-            )
-            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
-        }
-        "3" {
-            $tasks = @(
-                { Write-Host "Update Apps tasks selected." },
-                { Write-Host "Perform Pre-UpdateApps Tasks" },
-                { Start-DefenderScan },
-                { $operationStatus += Start-WinGetUpdate }
-            )
-            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
-        }
-        "4" {
-            $tasks = @(                
-                { Write-Host "Cleanup tasks selected." },
-                { Write-Host "Perform Pre-Cleanup Tasks" },
-                { Start-DefenderScan },
-                { $operationStatus += Start-Cleanup }
-            )
-            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
-        }
-        "5" {
-            $tasks = @(                
-                { Write-Host "Drive optimization selected." },
-                { Write-Host "Perform Pre-Optimization Tasks" },
-                { Start-DefenderScan },
-                { $operationStatus += Start-Optimization }
-            )
-            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
-        }
-        "6" {
-            $tasks = @(                
-                { Write-Host "Getting Computer Information" },
-                { Start-PCInfo }
-            )
-            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
-        }
-        "7" {
-            $tasks = @(                
-                { Write-Host "Analyzing Event Logs..." },
-                { Start-EventLogAnalysis }
-            )
-            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
-        }
-        "8" {
-            $tasks = @(                
-                { Write-Host "Performing all tasks (Except Mirror Backup)." },
-                { Write-Host "Perform Pre-Operation Tasks" },
-                { Start-DefenderScan },
-                { $operationStatus += Start-Repair },
-                { $operationStatus += Start-WinGetUpdate },
-                { $operationStatus += Start-Cleanup },
-                { $operationStatus += Start-Optimization },
-                { Start-PCInfo },
-                { Start-EventLogAnalysis }
-            )
-            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
-        }
-        "9" {
-            $paths = Get-BackupPaths
-            $source = $paths[0]
-            $destination = $paths[1]
-            $tasks = @(                
-                { Write-Host "Performing all tasks." },
-                { Write-Host "Perform Pre-Operation Tasks" },
-                { Start-DefenderScan },
-                { Start-Backup -source $source -destination $destination },
-                { $operationStatus += Start-Repair },
-                { $operationStatus += Start-WinGetUpdate },
-                { $operationStatus += Start-Cleanup },
-                { $operationStatus += Start-Optimization },
-                { Start-PCInfo },
-                { Start-EventLogAnalysis }
-            )
-            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
-        }
-        "10" {
-            Clear-Host
-            exit
-        }
-        default {
-            Write-Host "Invalid selection. Please choose an option from the menu."
-        }
+    if ($choice -eq "1" -or $choice -eq "9") {
+        $paths = Get-BackupPaths
+        $source = $paths[0]
+        $destination = $paths[1]
     }
 
-    Clear-Host
+    $tasks = Initialize-Tasks -choice $choice -source $source -destination $destination
 
-    # Display a summary message indicating that all tasks are complete.
-    if ($operationStatus) {
-        Show-Message "All tasks complete! Here is a summary of all operations:"
-        Write-Host "`n"
+    if ($tasks) {
+        Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
+    }
+    else {
+        Write-Host "Invalid selection. Please choose an option from the menu."
+    }
+
+    if ($operationStatus) {       
         foreach ($status in $operationStatus) {
             if (-not ($status -is [int]) -and -not ($status -is [System.Int64])) {
-                Show-Message $status
+                Write-Log -logFileName "completed" -message $status -functionName $MyInvocation.MyCommand.Name
             }
         }
     }
 
-    # Display error messages if any error records exist.
-    if ($global:ErrorRecords.Count -gt 0) {
-        Show-Message "Here is a summary of any errors:"
-        Write-Host "`n"
+    if ($global:ErrorRecords.Count -gt 0) {    
         foreach ($err in $global:ErrorRecords) {
             if (-not ($status -is [int]) -and -not ($status -is [System.Int64])) {
-                Show-Error $err
+                Write-Log -logFileName "errors" -message $status -functionName $MyInvocation.MyCommand.Name
             }
         }
     }

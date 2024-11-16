@@ -18,7 +18,7 @@ function Start-WinGetUpdate {
         # If WinGet is not installed, notify the user
         Show-Error "WinGet is not installed on this system. Please install WinGet to continue."
         Catcher -taskName "Start-WinGetUpdate" -errorMessage $_.Exception.Message
-        Write-Log -logFileName "winget_update.txt" -message "WinGet is not installed on this system." -functionName $MyInvocation.MyCommand.Name
+        Write-Log -logFileName "winget_update_errors" -message "WinGet is not installed on this system." -functionName $MyInvocation.MyCommand.Name
         return "WinGet is not installed on this system."
     }
 
@@ -29,7 +29,7 @@ function Start-WinGetUpdate {
         if ($wingetProcess.ExitCode -ne 0) {
             throw "winget update process failed with exit code $($wingetProcess.ExitCode)."
         }
-        Write-Log -logFileName "winget_update.txt" -message "winget update completed successfully." -functionName $MyInvocation.MyCommand.Name  
+        Write-Log -logFileName "winget_update" -message "winget update completed successfully." -functionName $MyInvocation.MyCommand.Name  
         Show-Message "Winget update completed successfully."
         return "Winget update completed successfully."
     }
@@ -37,7 +37,7 @@ function Start-WinGetUpdate {
         # Log the error message if the WinGet update process fails
         $errorDetails = $_.Exception | Out-String
         Catcher -taskName "Start-WinGetUpdate" -errorMessage $_.Exception.Message
-        Write-Log -logFileName "winget_update_error_log.txt" -message "winget update failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
+        Write-Log -logFileName "winget_update_errors" -message "winget update failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
         Show-Error "Winget update failed. Please check the log file for more details."
         return "Winget update failed. Please check the log file for more details."
     }

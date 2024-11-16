@@ -43,69 +43,69 @@ function Start-Backup {
             
     # Validate source and destination paths
     if (-not [System.IO.Directory]::Exists($source)) {
-        Write-Log -logFileName "backup_error_log.txt" -message "Error: Source path '$source' is invalid or does not exist." -functionName $MyInvocation.MyCommand.Name
+        Write-Log -logFileName "backup_error_log" -message "Error: Source path '$source' is invalid or does not exist." -functionName $MyInvocation.MyCommand.Name
         Show-Message "Error: Source path '$source' is invalid or does not exist."
         return "Robocopy Backup: Failed due to invalid source path."
     }
     
     if (-not [System.IO.Directory]::Exists($destination)) {        
-        Write-Log -logFileName "backup_error_log.txt" -message "Error: Destination path '$destination' is invalid or does not exist." -functionName $MyInvocation.MyCommand.Name
+        Write-Log -logFileName "backup_error_log" -message "Error: Destination path '$destination' is invalid or does not exist." -functionName $MyInvocation.MyCommand.Name
         Show-Message "Error: Destination path '$destination' is invalid or does not exist."
         return "Robocopy Backup: Failed due to invalid destination path."
     }
     
     Show-Message "Starting the backup using Robocopy from $source to $destination..."
-    Write-Log -logFileName "backup_log.txt" -message "Starting the backup using Robocopy from $source to $destination..." -functionName $MyInvocation.MyCommand.Name
+    Write-Log -logFileName "backup_log" -message "Starting the backup using Robocopy from $source to $destination..." -functionName $MyInvocation.MyCommand.Name
     try {
         $robocopyProcess = Start-Process -FilePath "robocopy" -ArgumentList "${source} ${destination} /MIR /FFT /Z /XA:H /W:5 /A-:SH" -NoNewWindow -Wait -PassThru
         switch ($robocopyProcess.ExitCode) {
             0 {                
-                Write-Log -logFileName "backup_log.txt" -message "Backup complete with no errors. Exit code: 0" -functionName $MyInvocation.MyCommand.Name
+                Write-Log -logFileName "backup_log" -message "Backup complete with no errors. Exit code: 0" -functionName $MyInvocation.MyCommand.Name
                 Show-Message "Backup complete with no errors. Exit code: 0"
                 return "Robocopy Backup: Completed successfully, Exit code: 0"
             }
             1 {                
-                Write-Log -logFileName "backup_log.txt" -message "Some files were copied. No errors were encountered. Exit code: 1" -functionName $MyInvocation.MyCommand.Name
+                Write-Log -logFileName "backup_log" -message "Some files were copied. No errors were encountered. Exit code: 1" -functionName $MyInvocation.MyCommand.Name
                 Show-Message "Some files were copied. No errors were encountered. Exit code: 1"
                 return "Robocopy Backup: Completed with minor issues, Exit code: 1"
             }
             2 {               
-                Write-Log -logFileName "backup_log.txt" -message "Extra files or directories were detected. Exit code: 2" -functionName $MyInvocation.MyCommand.Name
+                Write-Log -logFileName "backup_log" -message "Extra files or directories were detected. Exit code: 2" -functionName $MyInvocation.MyCommand.Name
                 Show-Message "Extra files or directories were detected. Exit code: 2"
                 return "Robocopy Backup: Completed with extra files/directories, Exit code: 2"
             }
             3 {                
-                Write-Log -logFileName "backup_log.txt" -message "Some files were copied and extra files were detected. Exit code: 3" -functionName $MyInvocation.MyCommand.Name
+                Write-Log -logFileName "backup_log" -message "Some files were copied and extra files were detected. Exit code: 3" -functionName $MyInvocation.MyCommand.Name
                 Show-Message "Some files were copied and extra files were detected. Exit code: 3"
                 return "Robocopy Backup: Completed with some issues, Exit code: 3"
             }
             5 {               
-                Write-Log -logFileName "backup_log.txt" -message "Some files were mismatched. No files were copied. Exit code: 5" -functionName $MyInvocation.MyCommand.Name
+                Write-Log -logFileName "backup_log" -message "Some files were mismatched. No files were copied. Exit code: 5" -functionName $MyInvocation.MyCommand.Name
                 Show-Message "Some files were mismatched. No files were copied. Exit code: 5"
                 return "Robocopy Backup: Completed with mismatched files, Exit code: 5"
             }
             6 {                
-                Write-Log -logFileName "backup_log.txt" -message "Additional files or directories were detected and mismatched. Exit code: 6" -functionName $MyInvocation.MyCommand.Name
+                Write-Log -logFileName "backup_log" -message "Additional files or directories were detected and mismatched. Exit code: 6" -functionName $MyInvocation.MyCommand.Name
                 Show-Message "Additional files or directories were detected and mismatched. Exit code: 6"
                 return "Robocopy Backup: Completed with mismatched files and extra files, Exit code: 6"
             }
             7 {                
-                Write-Log -logFileName "backup_log.txt" -message "Files were copied, mismatched, and extra files were detected. Exit code: 7" -functionName $MyInvocation.MyCommand.Name
+                Write-Log -logFileName "backup_log" -message "Files were copied, mismatched, and extra files were detected. Exit code: 7" -functionName $MyInvocation.MyCommand.Name
                 Show-Message "Files were copied, mismatched, and extra files were detected. Exit code: 7"
                 return "Robocopy Backup: Completed with several issues, Exit code: 7"
             }
             8 {               
-                Write-Log -logFileName "backup_log.txt" -message "Backup completed with some files/directories mismatch. Exit code: 8" -functionName $MyInvocation.MyCommand.Name
+                Write-Log -logFileName "backup_log" -message "Backup completed with some files/directories mismatch. Exit code: 8" -functionName $MyInvocation.MyCommand.Name
                 Show-Message "Backup completed with some files/directories mismatch. Exit code: 8"
                 return "Robocopy Backup: Completed with issues, Exit code: 8"
             }
             16 {                
-                Write-Log -logFileName "backup_log.txt" -message "Backup completed with serious errors. Exit code: 16" -functionName $MyInvocation.MyCommand.Name
+                Write-Log -logFileName "backup_log" -message "Backup completed with serious errors. Exit code: 16" -functionName $MyInvocation.MyCommand.Name
                 Show-Message "Backup completed with serious errors. Exit code: 16"
                 return "Robocopy Backup: Completed with serious errors, Exit code: 16"
             }
             default {                
-                Write-Log -logFileName "backup_log.txt" -message "Backup completed with some issues. Exit code: $($robocopyProcess.ExitCode)" -functionName $MyInvocation.MyCommand.Name
+                Write-Log -logFileName "backup_log" -message "Backup completed with some issues. Exit code: $($robocopyProcess.ExitCode)" -functionName $MyInvocation.MyCommand.Name
                 Show-Message "Backup completed with some issues. Exit code: $($robocopyProcess.ExitCode)"
                 return "Robocopy Backup: Completed with issues, Exit code: $($robocopyProcess.ExitCode)"
             }
@@ -114,7 +114,7 @@ function Start-Backup {
     catch {
         # Enhanced logging for troubleshooting
         $errorDetails = $_.Exception | Out-String       
-        Write-Log -logFileName "backup_error_log.txt" -message "Backup failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
+        Write-Log -logFileName "backup_log_errors" -message "Backup failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
         Catcher -taskName "Backup" -errorMessage $_.Exception.Message
         Show-Error "Robocopy Backup: Failed due to an unexpected error. Please check the log for more information."
         return "Robocopy Backup: Failed due to an unexpected error. Please check the log for more information."
