@@ -57,7 +57,7 @@ function Start-Backup {
     Show-Message "Starting the backup using Robocopy from $source to $destination..."
     Write-Log -logFileName "backup_log.txt" -message "Starting the backup using Robocopy from $source to $destination..." -functionName $MyInvocation.MyCommand.Name
     try {
-        $robocopyProcess = Start-Process -FilePath "robocopy" -ArgumentList "${source} ${destination} /MIR /R:3 /W:10" -NoNewWindow -Wait -PassThru
+        $robocopyProcess = Start-Process -FilePath "robocopy" -ArgumentList "${source} ${destination} /MIR /FFT /Z /XA:H /W:5 /A-:SH" -NoNewWindow -Wait -PassThru
         switch ($robocopyProcess.ExitCode) {
             0 {                
                 Write-Log -logFileName "backup_log.txt" -message "Backup complete with no errors. Exit code: 0" -functionName $MyInvocation.MyCommand.Name

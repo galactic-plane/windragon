@@ -1,3 +1,20 @@
+# SYNOPSIS
+#     Moves the cursor to the top-left corner of the console and clears the screen.
+# SYNTAX
+#     ResetConsoleScreen
+# DESCRIPTION
+#     The ResetConsoleScreen function sets the cursor position to the top-left corner of the console window
+#     and clears the console screen.
+# EXAMPLES
+#     Example 1:
+#     ResetConsoleScreen
+#     This command moves the cursor to the top-left corner of the console and clears the screen.
+function ResetConsoleScreen {
+    # Moves the cursor to the top-left corner of the console and clears the screen
+    [Console]::SetCursorPosition(0, 0)
+    Clear-Host
+}
+
 # Initializes the settings by creating a settings file with default values if it doesn't exist.
 # Returns the settings read from the settings file.
 function Initialize-Settings {
@@ -160,4 +177,50 @@ function Start-DefenderScan {
     }
 
     Write-Log -logFileName "defender_scan_log.txt" -message "Windows Defender ran a scan based on current status" -functionName $MyInvocation.MyCommand.Name
+}
+
+# This function displays a progress bar while executing a series of tasks sequentially.
+# Each task is represented as a script block and is executed in the order provided.
+# The progress bar updates dynamically to reflect the completion status of each task.
+# A delay can be introduced between tasks, and the screen is cleared after each delay.
+# 
+# Parameters:
+# - Tasks: An array of script blocks representing the tasks to execute.
+# - DelayBetweenTasks: The delay in seconds between tasks (default is 2 seconds).
+# 
+# Example:
+# $tasks = @(
+#     { Write-Host "Task 1 running..."; Start-Sleep -Seconds 2 },
+#     { Write-Host "Task 2 running..."; Start-Sleep -Seconds 2 },
+#     { Write-Host "Task 3 running..."; Start-Sleep -Seconds 2 }
+# )
+# Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 3
+# 
+# The progress bar will update for each task, and there will be a 3-second delay
+# with the screen clearing after each task (except the last).
+function Show-ProgressBar {
+    param (
+        [array]$Tasks, # An array of tasks to execute
+        [int]$DelayBetweenTasks = 2  # Delay in seconds between tasks (default is 2 seconds)
+    )
+
+    $totalSteps = $Tasks.Count # Determine the total number of steps based on the task count
+
+    for ($i = 0; $i -lt $totalSteps; $i++) {
+        $percentComplete = (($i + 1) / $totalSteps) * 100 # Calculate the percentage complete
+
+   
+        # Update the progress bar
+        Write-Progress -Activity 'Executing Tasks' `
+            -Status "Executing Task $($i + 1) of $totalSteps" `
+            -PercentComplete $percentComplete
+
+        # Execute the current task
+        & $Tasks[$i]
+
+        # Delay and clear screen after each task, but keep progress bar at the top
+        if ($i -lt ($totalSteps - 1)) {
+            Start-Sleep -Seconds $DelayBetweenTasks
+        }
+    }
 }

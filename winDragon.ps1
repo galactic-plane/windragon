@@ -29,6 +29,70 @@ $global:ErrorRecords = @()
 # Global variable to ensure the quick scan runs at least once
 $global:QuickScanRunOnce = $false
 
+#####################################
+# Import the Utils Module
+. .\Modules\Utils.ps1
+#####################################
+# Utility functions for various common tasks:
+# - Initialize-Settings: Creates a settings file for default paths.
+# - Catcher: Handles errors by throwing an exception if the task name is null or empty.
+# - Write-Log: Logs messages to a log file in a dated folder.
+# - Start-DefenderScan: Runs a virus scan using Windows Defender based on the current status.
+
+#####################################
+# Import the Backup Module
+. .\Modules\Backup.ps1
+#####################################
+# Functions for backup operations:
+# - Get-BackupPaths: Prompts the user to enter the source and destination directories for a backup operation.
+# - Start-Backup: Initiates a backup operation using Robocopy to copy files from a source directory to a destination directory.
+
+#####################################
+# Import the Repair Module
+. .\Modules\Repair.ps1
+#####################################
+# Functions for system repair tasks:
+# - Start-Repair: Performs a series of system repair tasks using various system tools (e.g., DISM and SFC).
+
+#####################################
+# Import the Update Module
+. .\Modules\Update.ps1
+#####################################
+# Functions for updating installed software:
+# - Start-WinGetUpdate: Installs WinGet if it is not already installed or if the installed version is outdated, and updates all installed packages.
+
+#####################################
+# Import the Cleanup Module
+. .\Modules\Cleanup.ps1
+#####################################
+# Functions for system cleanup tasks:
+# - Start-Cleanup: Executes an advanced disk cleanup using the built-in Windows tool.
+
+#####################################
+# Import the Optimize Module
+. .\Modules\Optimize.ps1
+#####################################
+# Functions for disk optimization:
+# - Start-Optimization: Performs disk optimization on all physical drives detected by the system.
+
+#####################################
+# Import the SysInfo Module
+. .\Modules\SysInfo.ps1
+#####################################
+# Functions for collecting system information:
+# - Start-PCInfo: Collects and displays detailed information about the computer's hardware and system configuration.
+
+#####################################
+# Import the SysEvents Module
+. .\Modules\SysEvents.ps1
+#####################################
+# Functions for event log analysis:
+# - Search-OnlineForInfo: Takes a message string and generates a Bing search URL for the given information.
+# - Get-EventLogEntries: Retrieves event log entries based on the specified log name and event level.
+# - Show-EventLogEntries: Displays event log entries with detailed information and logs the analysis.
+# - Start-EventLogAnalysis: Analyzes the system event logs for critical events and errors.
+#####################################
+
 # Function to show ASCII Dragon
 function Show-Dragon {
     $dragon = @"
@@ -134,70 +198,6 @@ function Show-Menu {
     return $choice
 }
 
-#####################################
-# Import the Utils Module
-. .\Modules\Utils.ps1
-#####################################
-# Utility functions for various common tasks:
-# - Initialize-Settings: Creates a settings file for default paths.
-# - Catcher: Handles errors by throwing an exception if the task name is null or empty.
-# - Write-Log: Logs messages to a log file in a dated folder.
-# - Start-DefenderScan: Runs a virus scan using Windows Defender based on the current status.
-
-#####################################
-# Import the Backup Module
-. .\Modules\Backup.ps1
-#####################################
-# Functions for backup operations:
-# - Get-BackupPaths: Prompts the user to enter the source and destination directories for a backup operation.
-# - Start-Backup: Initiates a backup operation using Robocopy to copy files from a source directory to a destination directory.
-
-#####################################
-# Import the Repair Module
-. .\Modules\Repair.ps1
-#####################################
-# Functions for system repair tasks:
-# - Start-Repair: Performs a series of system repair tasks using various system tools (e.g., DISM and SFC).
-
-#####################################
-# Import the Update Module
-. .\Modules\Update.ps1
-#####################################
-# Functions for updating installed software:
-# - Start-WinGetUpdate: Installs WinGet if it is not already installed or if the installed version is outdated, and updates all installed packages.
-
-#####################################
-# Import the Cleanup Module
-. .\Modules\Cleanup.ps1
-#####################################
-# Functions for system cleanup tasks:
-# - Start-Cleanup: Executes an advanced disk cleanup using the built-in Windows tool.
-
-#####################################
-# Import the Optimize Module
-. .\Modules\Optimize.ps1
-#####################################
-# Functions for disk optimization:
-# - Start-Optimization: Performs disk optimization on all physical drives detected by the system.
-
-#####################################
-# Import the SysInfo Module
-. .\Modules\SysInfo.ps1
-#####################################
-# Functions for collecting system information:
-# - Start-PCInfo: Collects and displays detailed information about the computer's hardware and system configuration.
-
-#####################################
-# Import the SysEvents Module
-. .\Modules\SysEvents.ps1
-#####################################
-# Functions for event log analysis:
-# - Search-OnlineForInfo: Takes a message string and generates a Bing search URL for the given information.
-# - Get-EventLogEntries: Retrieves event log entries based on the specified log name and event level.
-# - Show-EventLogEntries: Displays event log entries with detailed information and logs the analysis.
-# - Start-EventLogAnalysis: Analyzes the system event logs for critical events and errors.
-#####################################
-
 Clear-Host
 
 # Display the ASCII dragon
@@ -220,104 +220,116 @@ do {
     $global:ErrorRecords = @()
     $operationStatus = @()
 
+    Clear-Host
+
     $choice = Show-Menu
 
     switch ($choice) {
         "1" {
-            Clear-Host
-            Write-Host "Mirror Backup selected."
             $paths = Get-BackupPaths
             $source = $paths[0]
             $destination = $paths[1]
-            Write-Host "Perform Pre-Backup Tasks"
-            # Run a quick virus scan
-            Start-DefenderScan
-            $operationStatus += Start-Backup -source $source -destination $destination
+            $tasks = @(
+                { Write-Host "Mirror Backup selected." },
+                { Write-Host "Perform Pre-Backup Tasks" },
+                { Start-DefenderScan -ScanType QuickScan },
+                { Write-Host "Performing Mirror Backup." },
+                { $operationStatus += Start-Backup -source $source -destination $destination }
+            )
+            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
         }
         "2" {
-            Clear-Host
-            Write-Host "Repair tasks selected."
-            Write-Host "Perform Pre-Repair Tasks"
-            # Run a quick virus scan
-            Start-DefenderScan
-            $operationStatus += Start-Repair
+            $tasks = @(
+                { Write-Host "Repair tasks selected." },
+                { Write-Host "Perform Pre-Repair Tasks" },
+                { Start-DefenderScan },
+                { $operationStatus += Start-Repair }
+            )
+            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
         }
         "3" {
-            Clear-Host
-            Write-Host "Update Apps tasks selected."
-            Write-Host "Perform Pre-UpdateApps Tasks"
-            # Run a quick virus scan
-            Start-DefenderScan
-            $operationStatus += Start-WinGetUpdate
+            $tasks = @(
+                { Write-Host "Update Apps tasks selected." },
+                { Write-Host "Perform Pre-UpdateApps Tasks" },
+                { Start-DefenderScan },
+                { $operationStatus += Start-WinGetUpdate }
+            )
+            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
         }
         "4" {
-            Clear-Host
-            Write-Host "Cleanup tasks selected."
-            Write-Host "Perform Pre-Cleanup Tasks"
-            # Run a quick virus scan
-            Start-DefenderScan
-            $operationStatus += Start-Cleanup
+            $tasks = @(                
+                { Write-Host "Cleanup tasks selected." },
+                { Write-Host "Perform Pre-Cleanup Tasks" },
+                { Start-DefenderScan },
+                { $operationStatus += Start-Cleanup }
+            )
+            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
         }
         "5" {
-            Clear-Host
-            Write-Host "Drive optimization selected."
-            Write-Host "Perform Pre-Optimization Tasks"
-            # Run a quick virus scan
-            Start-DefenderScan
-            $operationStatus += Start-Optimization
+            $tasks = @(                
+                { Write-Host "Drive optimization selected." },
+                { Write-Host "Perform Pre-Optimization Tasks" },
+                { Start-DefenderScan },
+                { $operationStatus += Start-Optimization }
+            )
+            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
         }
         "6" {
-            Clear-Host
-            Write-Host "Getting Computer Information"
-            Start-PCInfo          
+            $tasks = @(                
+                { Write-Host "Getting Computer Information" },
+                { Start-PCInfo }
+            )
+            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
         }
         "7" {
-            Clear-Host
-            Write-Host "Analyzing Event Logs..."
-            Start-EventLogAnalysis      
+            $tasks = @(                
+                { Write-Host "Analyzing Event Logs..." },
+                { Start-EventLogAnalysis }
+            )
+            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
         }
         "8" {
-            Clear-Host
-            Write-Host "Performing all tasks (Except Mirror Backup)."    
-            Write-Host "Perform Pre-Operation Tasks"
-            # Run a quick virus scan
-            Start-DefenderScan        
-            $operationStatus += Start-Repair
-            $operationStatus += Start-WinGetUpdate
-            $operationStatus += Start-Cleanup
-            $operationStatus += Start-Optimization
-            Start-PCInfo   
-            Start-EventLogAnalysis
+            $tasks = @(                
+                { Write-Host "Performing all tasks (Except Mirror Backup)." },
+                { Write-Host "Perform Pre-Operation Tasks" },
+                { Start-DefenderScan },
+                { $operationStatus += Start-Repair },
+                { $operationStatus += Start-WinGetUpdate },
+                { $operationStatus += Start-Cleanup },
+                { $operationStatus += Start-Optimization },
+                { Start-PCInfo },
+                { Start-EventLogAnalysis }
+            )
+            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
         }
         "9" {
-            Clear-Host
-            Write-Host "Performing all tasks."
-            Write-Host "Perform Pre-Operation Tasks"
-            # Run a quick virus scan
-            Start-DefenderScan 
             $paths = Get-BackupPaths
             $source = $paths[0]
             $destination = $paths[1]
-            $operationStatus += Start-Backup -source $source -destination $destination
-            $operationStatus += Start-Repair
-            $operationStatus += Start-WinGetUpdate
-            $operationStatus += Start-Cleanup
-            $operationStatus += Start-Optimization
-            Start-PCInfo   
-            Start-EventLogAnalysis
+            $tasks = @(                
+                { Write-Host "Performing all tasks." },
+                { Write-Host "Perform Pre-Operation Tasks" },
+                { Start-DefenderScan },
+                { Start-Backup -source $source -destination $destination },
+                { $operationStatus += Start-Repair },
+                { $operationStatus += Start-WinGetUpdate },
+                { $operationStatus += Start-Cleanup },
+                { $operationStatus += Start-Optimization },
+                { Start-PCInfo },
+                { Start-EventLogAnalysis }
+            )
+            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
         }
         "10" {
-            Write-Host "Exiting script."
             Clear-Host
             exit
         }
         default {
-            Clear-Host
             Write-Host "Invalid selection. Please choose an option from the menu."
         }
     }
 
-    Write-Host "`n"
+    Clear-Host
 
     # Display a summary message indicating that all tasks are complete.
     if ($operationStatus) {
@@ -340,8 +352,6 @@ do {
             }
         }
     }
-
-    Write-Host "`n"
 
     Pause
 
