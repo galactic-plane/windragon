@@ -201,19 +201,25 @@ function Show-ProgressBar {
     )
 
     $totalSteps = $Tasks.Count # Determine the total number of steps based on the task count
-    $startTime = Get-Date # Record the start time to estimate remaining time
 
     for ($i = 0; $i -lt $totalSteps; $i++) {
-        $elapsedTime = (Get-Date) - $startTime # Calculate elapsed time
-        $averageTimePerTask = if ($i -eq 0) { $DelayBetweenTasks } else { $elapsedTime.TotalSeconds / $i } # Use delay as initial estimate for average time per task
-        $estimatedRemainingTime = [timespan]::FromSeconds($averageTimePerTask * ($totalSteps - $i)) # Estimate remaining time
-
+        ResetConsoleScreen # Clear the console screen for a clean display
         $percentComplete = [math]::Round((($i + 1) / $totalSteps) * 100, 2) # Calculate the percentage complete and round to 2 decimal places
-
-        # Update the progress bar with the current status
-        Write-Progress -Activity 'Executing Tasks' `
-            -Status "Executing Task $($i + 1) of $totalSteps - Estimated Time Remaining: $([math]::Round($estimatedRemainingTime.TotalSeconds, 0)) seconds" `
-            -PercentComplete $percentComplete
+        # Enhanced custom progress bar
+        $barLength = 50 # Length of the progress bar in characters
+        $filledLength = [math]::Round(($percentComplete / 100) * $barLength)
+        $progressBar = "".PadLeft($filledLength, '█') + "".PadRight($barLength - $filledLength, '░') # Use solid and light blocks for a visual enhancement
+        
+        # Progress bar display with task information
+        Write-Host "`r" -NoNewline
+        Write-Host "[" -NoNewline -ForegroundColor Yellow
+        Write-Host "$progressBar" -NoNewline -ForegroundColor Green
+        Write-Host "]" -NoNewline -ForegroundColor Yellow
+        Write-Host " $percentComplete% - " -NoNewline -ForegroundColor Yellow
+        Write-Host "Executing:" -NoNewline -ForegroundColor White
+        Write-Host " - Task $($i + 1) of $totalSteps" -NoNewline -ForegroundColor Yellow
+        Write-Host "`n"
+        Write-Host "`n"
 
         # Execute the current task with error handling
         try {
