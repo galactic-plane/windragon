@@ -173,7 +173,7 @@ function Show-Error {
 #              software updates, drive optimization, and system information retrieval.
 #              The user is prompted to enter a selection, which is then returned for further processing.
 function Show-Menu {
-    Clear-Host
+    ResetConsoleScreen
     Show-Dragon
     Write-Host "`n"
     Write-Host "================================================================" -ForegroundColor Cyan
@@ -287,7 +287,7 @@ function Initialize-Tasks {
             )
         }
         "10" {
-            Clear-Host
+            ResetConsoleScreen
             exit
         }
         default {
@@ -297,7 +297,7 @@ function Initialize-Tasks {
     return $tasks
 }
 
-Clear-Host
+ResetConsoleScreen
 Show-Dragon
 
 Write-Host "`n"

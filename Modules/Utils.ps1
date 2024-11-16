@@ -11,8 +11,7 @@
 #     This command moves the cursor to the top-left corner of the console and clears the screen.
 function ResetConsoleScreen {
     # Moves the cursor to the top-left corner of the console and clears the screen
-    [Console]::SetCursorPosition(0, 0)
-    Clear-Host
+    [System.Console]::Clear()
 }
 
 # Initializes the settings by creating a settings file with default values if it doesn't exist.
