@@ -5,6 +5,7 @@
 This script provides an interactive menu-driven interface for performing various maintenance tasks on a Windows machine. Tasks include backup, repair, cleanup, drive optimization, or all tasks sequentially.
 
 ## 🖥️ Supported Operating Systems
+- Windows 10
 - Windows 11
 
 **Note:** This script relies on PowerShell commands and tools like DISM, Robocopy, and SFC, which are supported on the above-listed versions of Windows.
@@ -19,6 +20,7 @@ This script provides an interactive menu-driven interface for performing various
 ## 📋 Requirements
 - PowerShell 7.4.6 or newer
 - Administrator privileges to perform system-level operations like repair, cleanup, and optimization.
+- Internet connection for software updates and online searches.
 
 ## 🌟 Features
 - **🔄 Mirror Backup:** Uses Robocopy to create a mirror backup of specified directories.
@@ -28,6 +30,7 @@ This script provides an interactive menu-driven interface for performing various
 - **💽 Drive Optimization:** Optimizes SSDs and HDDs using appropriate methods.
 - **ℹ️ System Information:** Collects and displays detailed system information.
 - **📊 Event Log Analysis:** Analyzes system event logs for errors and warnings.
+- **🔍 Online Search:** Generates a Bing search URL for the given information.
 
 ## 🔧 Functions
 ### 🐉 Show-Dragon

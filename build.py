@@ -1,3 +1,26 @@
+# Author: Daniel Penrod
+# Python Version: 3.13
+# Description:
+#   This script automates the process of combining multiple PowerShell scripts into a single file.
+#   It reads from a main PowerShell script, identifies and includes referenced module scripts,
+#   and writes the combined script to an output file in a 'build' directory. Before creating the build,
+#   it ensures that any existing build directory is deleted to avoid conflicts. Additionally, the script
+#   maintains a version number (major, minor, patch, build) in a settings JSON file, updating the build
+#   number with each run.
+#
+# How to Run:
+#   1. Ensure you have Python 3.13 installed.
+#   2. Place this script in the same directory as your 'winDragon.ps1' file and 'Modules' folder.
+#   3. Run this script using the command: python build.py
+#   4. The combined script will be saved in a 'build' directory as 'winDragon_<version>.ps1'.
+#
+# What it Will Do:
+#   - Read settings from a JSON file, creating default settings if none exist.
+#   - Increment the build number in the version information.
+#   - Delete any existing 'build' directory to create a clean build environment.
+#   - Combine the main PowerShell script and referenced module scripts into a single output file.
+#   - Save the combined script in the 'build' directory with a versioned filename.
+
 import os
 import re
 import json
