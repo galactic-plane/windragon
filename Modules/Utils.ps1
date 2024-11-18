@@ -228,12 +228,88 @@ function Start-WindowsMaintenance {
         & 'C:\Windows\System32\MSchedExe.exe' Start
         Write-Host "Windows Automatic Maintenance started successfully."
         Write-Log -logFileName "maintenance_scan_log" -message "Windows Automatic Maintenance started successfully." -functionName $MyInvocation.MyCommand.Name
+        Watch-WindowsMaintenance -TimeoutMinutes 120
     }
     catch {
         $errorDetails = $_.Exception | Out-String 
         Write-Host "Failed to start Windows Automatic Maintenance. Error: $_"
         Write-Log -logFileName "maintenance_scan_log_errors" -message "Maintenance failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
     }
+}
+
+# Function Name: Watch-WindowsMaintenance
+# Description:
+#   This function monitors the status of a specific executable (MSchedExe.exe) by checking if it is running, based on its full file path.
+#   The function will continue monitoring until the executable is no longer running or an optional timeout is reached.
+#   It uses PowerShell's `Get-Process` cmdlet combined with filtering by the process path to determine if the executable is active.
+#
+# Parameters:
+#   [int]$TimeoutMinutes - Optional. The maximum time, in minutes, to monitor the executable. Defaults to no timeout, meaning the function
+#                          will run indefinitely until the executable stops running.
+#
+# Logging:
+#   The function logs its activity to predefined log files using a custom logging function (`Write-Log`), including status updates
+#   and error messages if applicable.
+#
+# Logic:
+#   1. Checks for the running status of `MSchedExe.exe` using `Get-Process` and filters by its full path.
+#   2. Logs whether the executable is running or not.
+#   3. Implements a timeout mechanism if the `$TimeoutMinutes` parameter is provided.
+#   4. Uses exponential backoff to wait between checks, capping the delay at 5 minutes.
+#
+# Returns:
+#   None. The function writes status messages to the console and logs.
+#
+# Usage Examples:
+#   # Run indefinitely until the executable stops running:
+#   Watch-WindowsMaintenance
+#
+#   # Monitor for a maximum of 60 minutes:
+#   Watch-WindowsMaintenance -TimeoutMinutes 60
+#
+# Notes:
+#   - Ensure you have appropriate permissions to access process details and the executable's path.
+#   - Modify the executable path in the function (`C:\Windows\System32\MSchedExe.exe`) if monitoring a different executable.
+function Watch-WindowsMaintenance {
+    param (
+        [int]$TimeoutMinutes = 0
+    )
+
+    Write-Host "Checking the status of Maintenance..."
+    Write-Log -logFileName "maintenance_scan_log" -message "Checking the status of Maintenance..." -functionName $MyInvocation.MyCommand.Name
+
+    $startTime = Get-Date
+    $attempt = 0
+
+    while ($true) {
+        # Check if the executable is running by its path
+        if (Get-Process | Where-Object { $_.Path -eq 'C:\Windows\System32\MSchedExe.exe' }) {
+            Write-Host "Maintenance is running..."
+            Write-Log -logFileName "maintenance_scan_log" -message "MSchedExe.exe is running..." -functionName $MyInvocation.MyCommand.Name
+        } else {
+            Write-Host "Maintenance is not running."
+            Write-Log -logFileName "maintenance_scan_log" -message "MSchedExe.exe is not running." -functionName $MyInvocation.MyCommand.Name
+            break
+        }
+
+        # Check if timeout has been reached
+        if ($TimeoutMinutes -gt 0) {
+            $elapsedTime = (Get-Date) - $startTime
+            if ($elapsedTime.TotalMinutes -ge $TimeoutMinutes) {
+                Write-Host "Timeout reached. Stopping Maintenance."
+                Write-Log -logFileName "maintenance_scan_log" -message "Timeout reached. Stopping Maintenance." -functionName $MyInvocation.MyCommand.Name
+                break
+            }
+        }
+
+        # Wait before checking again using exponential backoff
+        $sleepSeconds = [math]::Min([math]::Pow(2, $attempt), 300)  # Cap the wait time at 300 seconds (5 minutes)
+        Start-Sleep -Seconds $sleepSeconds
+        $attempt++
+    }
+
+    Write-Host "Maintenance has completed."
+    Write-Log -logFileName "maintenance_scan_log" -message "Maintenance has completed." -functionName $MyInvocation.MyCommand.Name
 }
 
 # This function displays a progress bar while executing a series of tasks sequentially.
