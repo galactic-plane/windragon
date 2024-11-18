@@ -5,16 +5,15 @@
 This script provides an interactive menu-driven interface for performing various maintenance tasks on a Windows machine. Tasks include backup, repair, cleanup, drive optimization, or all tasks sequentially.
 
 ## 🖥️ Supported Operating Systems
-- Windows 10
 - Windows 11
 
 **Note:** This script relies on PowerShell commands and tools like DISM, Robocopy, and SFC, which are supported on the above-listed versions of Windows.
 
 ## 🚀 How to Run the Script
 1. Open PowerShell as an Administrator.
-2. Navigate to the directory where this script is located.
+2. Run build.py and then navigate to the directory `build` where this script is located.
    - Use the `cd` command to change directories. Example: `cd C:\path\to\script`
-3. Run the script by typing: `.\WinDragon.ps1`
+3. Run the script by typing: `.\winDragon_{version}.ps1`
 4. Follow the interactive prompts to select the tasks you wish to perform.
 
 ## 📋 Requirements
