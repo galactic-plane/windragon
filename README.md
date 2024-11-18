@@ -12,7 +12,7 @@ This script provides an interactive menu-driven interface for performing various
 ## 🚀 How to Run the Script
 1. Open PowerShell as an Administrator.
 2. Run build.py and then navigate to the directory `build` where this script is located.
-   - Use the `cd` command to change directories. Example: `cd C:\path\to\script`
+   - Use the `cd` command to change directories. Example: `cd build`
 3. Run the script by typing: `.\winDragon_{version}.ps1`
 4. Follow the interactive prompts to select the tasks you wish to perform.
 
