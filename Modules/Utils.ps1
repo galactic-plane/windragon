@@ -185,6 +185,12 @@ function Start-DefenderScan {
 # Returns: None
 # Usage: Start-WindowsMaintenance
 function Start-WindowsMaintenance {
+
+    if ($global:MaintenanceScanRunOnce) {
+        Write-Host "Windows Automatic Maintenance has already been initiated. Skipping..."
+        return; # Skip if maintenance has already been initiated
+    }
+
     # Check if Task Scheduler service is running
     $serviceName = 'Schedule'
     $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
@@ -225,10 +231,21 @@ function Start-WindowsMaintenance {
 
     # Trigger Automatic Maintenance
     try {
-        & 'C:\Windows\System32\MSchedExe.exe' Start
-        Write-Host "Windows Automatic Maintenance started successfully."
-        Write-Log -logFileName "maintenance_scan_log" -message "Windows Automatic Maintenance started successfully." -functionName $MyInvocation.MyCommand.Name
-        Watch-WindowsMaintenance -TimeoutMinutes 120
+        if (-not $global:MaintenanceScanRunOnce) {
+            Write-Host "Starting Windows Defender Quick Scan..." -ForegroundColor Green
+            
+            & 'C:\Windows\System32\MSchedExe.exe' Start
+            Write-Host "Windows Automatic Maintenance started successfully."
+            Write-Log -logFileName "maintenance_scan_log" -message "Windows Automatic Maintenance started successfully." -functionName $MyInvocation.MyCommand.Name
+            Watch-WindowsMaintenance -TimeoutMinutes 120
+    
+            # Set the flag to true after the first run
+            $global:MaintenanceScanRunOnce = $true
+        }
+        else {
+            Write-Host "Windows Automatic Maintenance has already been initiated. Skipping..."
+            Write-Log -logFileName "maintenance_scan_log" -message "Windows Automatic Maintenance has already been initiated. Skipping..." -functionName $MyInvocation.MyCommand.Name
+        }       
     }
     catch {
         $errorDetails = $_.Exception | Out-String 
@@ -284,11 +301,16 @@ function Watch-WindowsMaintenance {
     while ($true) {
         # Check if the executable is running by its path
         if (Get-Process | Where-Object { $_.Path -eq 'C:\Windows\System32\MSchedExe.exe' }) {
-            Write-Host "Maintenance is running..."
-            Write-Log -logFileName "maintenance_scan_log" -message "MSchedExe.exe is running..." -functionName $MyInvocation.MyCommand.Name
-        } else {
+            Write-Host "Waiting on Maintenance to complete"
+            Write-Log -logFileName "maintenance_scan_log" -message "Waiting on Maintenance to complete" -functionName $MyInvocation.MyCommand.Name
+        }
+        elseif (Get-Process -Name 'defrag' -ErrorAction SilentlyContinue) {
+            Write-Host "Waiting on Maintenance to complete"
+            Write-Log -logFileName "maintenance_scan_log" -message "Waiting on Maintenance to complete" -functionName $MyInvocation.MyCommand.Name
+        }
+        else {
             Write-Host "Maintenance is not running."
-            Write-Log -logFileName "maintenance_scan_log" -message "MSchedExe.exe is not running." -functionName $MyInvocation.MyCommand.Name
+            Write-Log -logFileName "maintenance_scan_log" -message "MSchedExe.exe or defrag is not running." -functionName $MyInvocation.MyCommand.Name
             break
         }
 

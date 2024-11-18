@@ -26,8 +26,10 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 
 # Global variable for storing error records
 $global:ErrorRecords = @()
-# Global variable to ensure the quick scan runs at least once
+# Global variable to ensure the quick scan runs only once
 $global:QuickScanRunOnce = $false
+# Global variable to ensure the maintenance scan runs only once
+$global:MaintenanceScanRunOnce = $false
 
 #####################################
 # Import the Utils Module
@@ -219,7 +221,7 @@ function Initialize-Tasks {
             $tasks = @(
                 { Write-Host "Repair tasks selected." },
                 { Write-Host "Perform Pre-Repair Tasks" },
-                { Start-DefenderScan },
+                { Start-DefenderScan -ScanType QuickScan },
                 { Start-WindowsMaintenance },
                 { $operationStatus += Start-Repair }
             )
@@ -228,7 +230,7 @@ function Initialize-Tasks {
             $tasks = @(
                 { Write-Host "Update Apps tasks selected." },
                 { Write-Host "Perform Pre-UpdateApps Tasks" },
-                { Start-DefenderScan },
+                { Start-DefenderScan -ScanType QuickScan },
                 { Start-WindowsMaintenance },
                 { $operationStatus += Start-WinGetUpdate }
             )
@@ -237,7 +239,7 @@ function Initialize-Tasks {
             $tasks = @(                
                 { Write-Host "Cleanup tasks selected." },
                 { Write-Host "Perform Pre-Cleanup Tasks" },
-                { Start-DefenderScan },
+                { Start-DefenderScan -ScanType QuickScan },
                 { Start-WindowsMaintenance },
                 { $operationStatus += Start-Cleanup }
             )
@@ -246,7 +248,7 @@ function Initialize-Tasks {
             $tasks = @(                
                 { Write-Host "Drive optimization selected." },
                 { Write-Host "Perform Pre-Optimization Tasks" },
-                { Start-DefenderScan },
+                { Start-DefenderScan -ScanType QuickScan },
                 { Start-WindowsMaintenance },
                 { $operationStatus += Start-Optimization }
             )
@@ -267,7 +269,7 @@ function Initialize-Tasks {
             $tasks = @(                
                 { Write-Host "Performing all tasks (Except Mirror Backup)." },
                 { Write-Host "Perform Pre-Operation Tasks" },
-                { Start-DefenderScan },
+                { Start-DefenderScan -ScanType QuickScan },
                 { Start-WindowsMaintenance },
                 { $operationStatus += Start-Repair },
                 { $operationStatus += Start-WinGetUpdate },
@@ -281,7 +283,7 @@ function Initialize-Tasks {
             $tasks = @(                
                 { Write-Host "Performing all tasks." },
                 { Write-Host "Perform Pre-Operation Tasks" },
-                { Start-DefenderScan },
+                { Start-DefenderScan -ScanType QuickScan },
                 { Start-WindowsMaintenance },
                 { Start-Backup -source $source -destination $destination },
                 { $operationStatus += Start-Repair },

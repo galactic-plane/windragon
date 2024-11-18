@@ -12,25 +12,26 @@
 #       a. If it is an SSD, run TRIM.
 #       b. If it is an HDD, run defragmentation.
 #   4. Log each step of the optimization process, including successes, failures, and any skipped drives.
+
 function Start-Optimization {
     try {
         Show-Message "Optimizing drives..."
         Write-Log -logFileName "drive_optimization_log" -message "Starting drive optimization process." -functionName $MyInvocation.MyCommand.Name
         try {
-            # Get the physical disks and filter to only those with known MediaType
-            $disks = Get-PhysicalDisk | Where-Object { $_.MediaType -ne "Unspecified" }
+            # Get the volumes to optimize, filtering by specific criteria
+            $partitions = Get-Volume | Where-Object { $_.DriveLetter -and -not $_.IsReadOnly -and $_.DriveType -ne 'System' }
             
-            # Handle the case where no disks are found
-            if ($disks.Count -eq 0) {
-                Write-Host "No physical disks found for optimization. Exiting."
-                Write-Log -logFileName "drive_optimization_log" -message "No physical disks found for optimization. Exiting." -functionName $MyInvocation.MyCommand.Name
-                return "No physical disks found for optimization. Exiting."
+            # Handle the case where no partitions are found
+            if ($partitions.Count -eq 0) {
+                Write-Host "No volumes found for optimization. Exiting."
+                Write-Log -logFileName "drive_optimization_log" -message "No volumes found for optimization. Exiting." -functionName $MyInvocation.MyCommand.Name
+                return "No volumes found for optimization. Exiting."
             }
 
-            foreach ($disk in $disks) {
-                # Get the appropriate partition - filter to only the primary partition
-                $partition = Get-Partition -DiskNumber $disk.DeviceId | Where-Object { $_.Type -eq 'Basic' -and $_.IsBoot -eq $true }
-                if ($null -ne $partition -and $partition.AccessPaths.Count -gt 0) {
+            foreach ($partition in $partitions) {
+                # Get the appropriate disk
+                $disk = Get-PhysicalDisk | Where-Object { $_.DeviceId -eq (Get-Partition -DriveLetter $partition.DriveLetter).DiskNumber }
+                if ($null -ne $disk) {
                     # If the MediaType is SSD, run an Optimize-Volume with the Trim option
                     if ($disk.MediaType -eq "SSD") {
                         Write-Host "Running TRIM on SSD: $($disk.FriendlyName)"
@@ -63,8 +64,8 @@ function Start-Optimization {
                 else {
                     # Log additional context information for skipped disks
                     $reason = "Disk is either unmounted or inaccessible."
-                    Write-Host "Skipping optimization on unmounted or inaccessible disk: $($disk.FriendlyName). Reason: $reason"
-                    Write-Log -logFileName "drive_optimization_log" -message "Skipped disk: $($disk.FriendlyName). Reason: $reason" -functionName $MyInvocation.MyCommand.Name
+                    Write-Host "Skipping optimization on unmounted or inaccessible partition: $($partition.DriveLetter). Reason: $reason"
+                    Write-Log -logFileName "drive_optimization_log" -message "Skipped partition: $($partition.DriveLetter). Reason: $reason" -functionName $MyInvocation.MyCommand.Name
                 }
             }
             return "Optimization Completed. Exiting."
