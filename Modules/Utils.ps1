@@ -175,6 +175,67 @@ function Start-DefenderScan {
     Write-Log -logFileName "defender_scan_log" -message "Windows Defender ran a scan based on current status" -functionName $MyInvocation.MyCommand.Name
 }
 
+# Function to start Windows maintenance tasks
+#
+# Function: Start-WindowsMaintenance
+# Description: This function initiates the Windows maintenance process by ensuring the Task Scheduler service is running. 
+#              If the service is not running, it attempts to start it with a retry mechanism. Once the service is confirmed to be running,
+#              it initiates Windows Automatic Maintenance. The function logs the progress and errors encountered during execution.
+# Parameters: None
+# Returns: None
+# Usage: Start-WindowsMaintenance
+function Start-WindowsMaintenance {
+    # Check if Task Scheduler service is running
+    $serviceName = 'Schedule'
+    $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+
+    if ($null -eq $service) {
+        Write-Host "The Task Scheduler service ($serviceName) is not found on this system."
+        Write-Log -logFileName "maintenance_scan_log" -message "The Task Scheduler service ($serviceName) is not found on this system." -functionName $MyInvocation.MyCommand.Name
+        return
+    }
+
+    if ($service.Status -ne 'Running') {
+        Write-Host "The Task Scheduler service ($serviceName) is not running. Starting it now..."
+        Write-Log -logFileName "maintenance_scan_log" -message "The Task Scheduler service ($serviceName) is not running. Starting it now..." -functionName $MyInvocation.MyCommand.Name
+        $maxRetries = 3
+        $retryCount = 0
+        while ($retryCount -lt $maxRetries) {
+            try {
+                Start-Service -Name $serviceName
+                Write-Host "Task Scheduler service started successfully."
+                Write-Log -logFileName "maintenance_scan_log" -message "Task Scheduler service started successfully." -functionName $MyInvocation.MyCommand.Name
+                break
+            }
+            catch {
+                # Enhanced logging for troubleshooting
+                $errorDetails = $_.Exception | Out-String 
+                Write-Host "Failed to start the Task Scheduler service. Attempt $($retryCount + 1) of $maxRetries. Error: $_"
+                Write-Log -logFileName "maintenance_scan_log_errors" -message "Maintenance failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
+                $retryCount++
+                if ($retryCount -ge $maxRetries) {
+                    Write-Host "Reached maximum retry attempts. Could not start the Task Scheduler service."
+                    Write-Log -logFileName "maintenance_scan_log" -message "Reached maximum retry attempts. Could not start the Task Scheduler service." -functionName $MyInvocation.MyCommand.Name
+                    return
+                }
+                Start-Sleep -Seconds 5
+            }
+        }
+    }   
+
+    # Trigger Automatic Maintenance
+    try {
+        & 'C:\Windows\System32\MSchedExe.exe' Start
+        Write-Host "Windows Automatic Maintenance started successfully."
+        Write-Log -logFileName "maintenance_scan_log" -message "Windows Automatic Maintenance started successfully." -functionName $MyInvocation.MyCommand.Name
+    }
+    catch {
+        $errorDetails = $_.Exception | Out-String 
+        Write-Host "Failed to start Windows Automatic Maintenance. Error: $_"
+        Write-Log -logFileName "maintenance_scan_log_errors" -message "Maintenance failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
+    }
+}
+
 # This function displays a progress bar while executing a series of tasks sequentially.
 # Each task is represented as a script block and is executed in the order provided.
 # The progress bar updates dynamically to reflect the completion status of each task.

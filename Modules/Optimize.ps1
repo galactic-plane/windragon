@@ -22,7 +22,7 @@ function Start-Optimization {
             
             # Handle the case where no disks are found
             if ($disks.Count -eq 0) {
-                Write-Output "No physical disks found for optimization. Exiting."
+                Write-Host "No physical disks found for optimization. Exiting."
                 Write-Log -logFileName "drive_optimization_log" -message "No physical disks found for optimization. Exiting." -functionName $MyInvocation.MyCommand.Name
                 return "No physical disks found for optimization. Exiting."
             }
@@ -33,7 +33,7 @@ function Start-Optimization {
                 if ($null -ne $partition -and $partition.AccessPaths.Count -gt 0) {
                     # If the MediaType is SSD, run an Optimize-Volume with the Trim option
                     if ($disk.MediaType -eq "SSD") {
-                        Write-Output "Running TRIM on SSD: $($disk.FriendlyName)"
+                        Write-Host "Running TRIM on SSD: $($disk.FriendlyName)"
                         Write-Log -logFileName "drive_optimization_log" -message "Running TRIM on SSD: $($disk.FriendlyName)" -functionName $MyInvocation.MyCommand.Name
                         try {
                             Optimize-Volume -DriveLetter $partition.DriveLetter -ReTrim -Verbose
@@ -47,7 +47,7 @@ function Start-Optimization {
                     }
                     # If the MediaType is HDD, run a defragmentation operation
                     elseif ($disk.MediaType -eq "HDD") {
-                        Write-Output "Running Defrag on HDD: $($disk.FriendlyName)"
+                        Write-Host "Running Defrag on HDD: $($disk.FriendlyName)"
                         Write-Log -logFileName "drive_optimization_log" -message "Running Defrag on HDD: $($disk.FriendlyName)"
                         try {
                             Optimize-Volume -DriveLetter $partition.DriveLetter -Defrag -Verbose
@@ -63,7 +63,7 @@ function Start-Optimization {
                 else {
                     # Log additional context information for skipped disks
                     $reason = "Disk is either unmounted or inaccessible."
-                    Write-Output "Skipping optimization on unmounted or inaccessible disk: $($disk.FriendlyName). Reason: $reason"
+                    Write-Host "Skipping optimization on unmounted or inaccessible disk: $($disk.FriendlyName). Reason: $reason"
                     Write-Log -logFileName "drive_optimization_log" -message "Skipped disk: $($disk.FriendlyName). Reason: $reason" -functionName $MyInvocation.MyCommand.Name
                 }
             }

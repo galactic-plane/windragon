@@ -358,6 +358,234 @@ function Start-DefenderScan {
 
 
 
+# Function to start Windows maintenance tasks
+
+#
+
+# Function: Start-WindowsMaintenance
+
+# Description: This function initiates the Windows maintenance process by ensuring the Task Scheduler service is running. 
+
+#              If the service is not running, it attempts to start it with a retry mechanism. Once the service is confirmed to be running,
+
+#              it initiates Windows Automatic Maintenance. The function logs the progress and errors encountered during execution.
+
+# Parameters: None
+
+# Returns: None
+
+# Usage: Start-WindowsMaintenance
+
+function Start-WindowsMaintenance {
+
+    # Check if Task Scheduler service is running
+
+    $serviceName = 'Schedule'
+
+    $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+
+
+
+    if ($null -eq $service) {
+
+        Write-Host "The Task Scheduler service ($serviceName) is not found on this system."
+
+        Write-Log -logFileName "maintenance_scan_log" -message "The Task Scheduler service ($serviceName) is not found on this system." -functionName $MyInvocation.MyCommand.Name
+
+        return
+
+    }
+
+
+
+    if ($service.Status -ne 'Running') {
+
+        Write-Host "The Task Scheduler service ($serviceName) is not running. Starting it now..."
+
+        Write-Log -logFileName "maintenance_scan_log" -message "The Task Scheduler service ($serviceName) is not running. Starting it now..." -functionName $MyInvocation.MyCommand.Name
+
+        $maxRetries = 3
+
+        $retryCount = 0
+
+        while ($retryCount -lt $maxRetries) {
+
+            try {
+
+                Start-Service -Name $serviceName
+
+                Write-Host "Task Scheduler service started successfully."
+
+                Write-Log -logFileName "maintenance_scan_log" -message "Task Scheduler service started successfully." -functionName $MyInvocation.MyCommand.Name
+
+                break
+
+            }
+
+            catch {
+
+                # Enhanced logging for troubleshooting
+
+                $errorDetails = $_.Exception | Out-String 
+
+                Write-Host "Failed to start the Task Scheduler service. Attempt $($retryCount + 1) of $maxRetries. Error: $_"
+
+                Write-Log -logFileName "maintenance_scan_log_errors" -message "Maintenance failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
+
+                $retryCount++
+
+                if ($retryCount -ge $maxRetries) {
+
+                    Write-Host "Reached maximum retry attempts. Could not start the Task Scheduler service."
+
+                    Write-Log -logFileName "maintenance_scan_log" -message "Reached maximum retry attempts. Could not start the Task Scheduler service." -functionName $MyInvocation.MyCommand.Name
+
+                    return
+
+                }
+
+                Start-Sleep -Seconds 5
+
+            }
+
+        }
+
+    }   
+
+
+
+    # Trigger Automatic Maintenance
+
+    try {
+
+        & 'C:\Windows\System32\MSchedExe.exe' Start
+
+        Write-Host "Windows Automatic Maintenance started successfully."
+
+        Write-Log -logFileName "maintenance_scan_log" -message "Windows Automatic Maintenance started successfully." -functionName $MyInvocation.MyCommand.Name
+
+        Watch-WindowsMaintenance -TimeoutMinutes 60
+
+    }
+
+    catch {
+
+        $errorDetails = $_.Exception | Out-String 
+
+        Write-Host "Failed to start Windows Automatic Maintenance. Error: $_"
+
+        Write-Log -logFileName "maintenance_scan_log_errors" -message "Maintenance failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
+
+    }
+
+}
+
+
+
+# Function to monitor Windows Automatic Maintenance
+
+#
+
+# Function: Watch-WindowsMaintenance
+
+# Description: This function monitors the status of Windows Automatic Maintenance. It continues checking until maintenance is no longer active
+
+#              or a specified timeout is reached. The function uses WMI to determine the status and incorporates error handling for failed queries.
+
+# Parameters:
+
+#   [int]$TimeoutMinutes - Optional. The maximum time in minutes to monitor maintenance. Defaults to no timeout.
+
+# Returns: None
+
+# Usage: Watch-WindowsMaintenance -TimeoutMinutes 60
+
+function Watch-WindowsMaintenance {
+
+    param (
+
+        [int]$TimeoutMinutes = 0
+
+    )
+
+
+
+    Write-Host "Checking the status of Automatic Maintenance..."
+
+    Write-Log -logFileName "maintenance_scan_log" -message "Checking the status of Automatic Maintenance..." -functionName $MyInvocation.MyCommand.Name
+
+
+
+    $startTime = Get-Date
+
+    $attempt = 0
+
+
+
+    while ($true) {
+
+        # Check if the MSchedExe.exe process is running
+
+        if (Get-Process -Name 'MSchedExe' -ErrorAction SilentlyContinue) {
+
+            Write-Host "MSchedExe.exe is running..."
+
+            Write-Log -logFileName "maintenance_scan_log" -message "MSchedExe.exe is running..." -functionName $MyInvocation.MyCommand.Name
+
+        }
+
+        else {
+
+            Write-Host "MSchedExe.exe is not running."
+
+            Write-Log -logFileName "maintenance_scan_log" -message "MSchedExe.exe is not running." -functionName $MyInvocation.MyCommand.Name
+
+            break
+
+        }
+
+
+
+        # Check if timeout has been reached
+
+        if ($TimeoutMinutes -gt 0) {
+
+            $elapsedTime = (Get-Date) - $startTime
+
+            if ($elapsedTime.TotalMinutes -ge $TimeoutMinutes) {
+
+                Write-Host "Timeout reached. Stopping monitoring of Automatic Maintenance."
+
+                Write-Log -logFileName "maintenance_scan_log" -message "Timeout reached. Stopping monitoring of Automatic Maintenance." -functionName $MyInvocation.MyCommand.Name
+
+                break
+
+            }
+
+        }
+
+
+
+        # Wait before checking again using exponential backoff
+
+        $sleepSeconds = [math]::Min([math]::Pow(2, $attempt), 300)  # Cap the wait time at 300 seconds (5 minutes)
+
+        Start-Sleep -Seconds $sleepSeconds
+
+        $attempt++
+
+    }
+
+
+
+    Write-Host "Monitoring has completed."
+
+    Write-Log -logFileName "maintenance_scan_log" -message "Monitoring has completed." -functionName $MyInvocation.MyCommand.Name
+
+}
+
+
+
 # This function displays a progress bar while executing a series of tasks sequentially.
 
 # Each task is represented as a script block and is executed in the order provided.
@@ -1070,7 +1298,7 @@ function Start-Optimization {
 
             if ($disks.Count -eq 0) {
 
-                Write-Output "No physical disks found for optimization. Exiting."
+                Write-Host "No physical disks found for optimization. Exiting."
 
                 Write-Log -logFileName "drive_optimization_log" -message "No physical disks found for optimization. Exiting." -functionName $MyInvocation.MyCommand.Name
 
@@ -1092,7 +1320,7 @@ function Start-Optimization {
 
                     if ($disk.MediaType -eq "SSD") {
 
-                        Write-Output "Running TRIM on SSD: $($disk.FriendlyName)"
+                        Write-Host "Running TRIM on SSD: $($disk.FriendlyName)"
 
                         Write-Log -logFileName "drive_optimization_log" -message "Running TRIM on SSD: $($disk.FriendlyName)" -functionName $MyInvocation.MyCommand.Name
 
@@ -1120,7 +1348,7 @@ function Start-Optimization {
 
                     elseif ($disk.MediaType -eq "HDD") {
 
-                        Write-Output "Running Defrag on HDD: $($disk.FriendlyName)"
+                        Write-Host "Running Defrag on HDD: $($disk.FriendlyName)"
 
                         Write-Log -logFileName "drive_optimization_log" -message "Running Defrag on HDD: $($disk.FriendlyName)"
 
@@ -1152,7 +1380,7 @@ function Start-Optimization {
 
                     $reason = "Disk is either unmounted or inaccessible."
 
-                    Write-Output "Skipping optimization on unmounted or inaccessible disk: $($disk.FriendlyName). Reason: $reason"
+                    Write-Host "Skipping optimization on unmounted or inaccessible disk: $($disk.FriendlyName). Reason: $reason"
 
                     Write-Log -logFileName "drive_optimization_log" -message "Skipped disk: $($disk.FriendlyName). Reason: $reason" -functionName $MyInvocation.MyCommand.Name
 
@@ -1777,6 +2005,7 @@ $tasks = @(
 { Write-Host "Repair tasks selected." },
 { Write-Host "Perform Pre-Repair Tasks" },
 { Start-DefenderScan },
+{ Start-WindowsMaintenance },
 { $operationStatus += Start-Repair }
 )
 }
@@ -1785,6 +2014,7 @@ $tasks = @(
 { Write-Host "Update Apps tasks selected." },
 { Write-Host "Perform Pre-UpdateApps Tasks" },
 { Start-DefenderScan },
+{ Start-WindowsMaintenance },
 { $operationStatus += Start-WinGetUpdate }
 )
 }
@@ -1793,6 +2023,7 @@ $tasks = @(
 { Write-Host "Cleanup tasks selected." },
 { Write-Host "Perform Pre-Cleanup Tasks" },
 { Start-DefenderScan },
+{ Start-WindowsMaintenance },
 { $operationStatus += Start-Cleanup }
 )
 }
@@ -1801,6 +2032,7 @@ $tasks = @(
 { Write-Host "Drive optimization selected." },
 { Write-Host "Perform Pre-Optimization Tasks" },
 { Start-DefenderScan },
+{ Start-WindowsMaintenance },
 { $operationStatus += Start-Optimization }
 )
 }
@@ -1821,6 +2053,7 @@ $tasks = @(
 { Write-Host "Performing all tasks (Except Mirror Backup)." },
 { Write-Host "Perform Pre-Operation Tasks" },
 { Start-DefenderScan },
+{ Start-WindowsMaintenance },
 { $operationStatus += Start-Repair },
 { $operationStatus += Start-WinGetUpdate },
 { $operationStatus += Start-Cleanup },
@@ -1834,6 +2067,7 @@ $tasks = @(
 { Write-Host "Performing all tasks." },
 { Write-Host "Perform Pre-Operation Tasks" },
 { Start-DefenderScan },
+{ Start-WindowsMaintenance },
 { Start-Backup -source $source -destination $destination },
 { $operationStatus += Start-Repair },
 { $operationStatus += Start-WinGetUpdate },

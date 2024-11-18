@@ -220,6 +220,7 @@ function Initialize-Tasks {
                 { Write-Host "Repair tasks selected." },
                 { Write-Host "Perform Pre-Repair Tasks" },
                 { Start-DefenderScan },
+                { Start-WindowsMaintenance },
                 { $operationStatus += Start-Repair }
             )
         }
@@ -228,6 +229,7 @@ function Initialize-Tasks {
                 { Write-Host "Update Apps tasks selected." },
                 { Write-Host "Perform Pre-UpdateApps Tasks" },
                 { Start-DefenderScan },
+                { Start-WindowsMaintenance },
                 { $operationStatus += Start-WinGetUpdate }
             )
         }
@@ -236,6 +238,7 @@ function Initialize-Tasks {
                 { Write-Host "Cleanup tasks selected." },
                 { Write-Host "Perform Pre-Cleanup Tasks" },
                 { Start-DefenderScan },
+                { Start-WindowsMaintenance },
                 { $operationStatus += Start-Cleanup }
             )
         }
@@ -244,6 +247,7 @@ function Initialize-Tasks {
                 { Write-Host "Drive optimization selected." },
                 { Write-Host "Perform Pre-Optimization Tasks" },
                 { Start-DefenderScan },
+                { Start-WindowsMaintenance },
                 { $operationStatus += Start-Optimization }
             )
         }
@@ -264,6 +268,7 @@ function Initialize-Tasks {
                 { Write-Host "Performing all tasks (Except Mirror Backup)." },
                 { Write-Host "Perform Pre-Operation Tasks" },
                 { Start-DefenderScan },
+                { Start-WindowsMaintenance },
                 { $operationStatus += Start-Repair },
                 { $operationStatus += Start-WinGetUpdate },
                 { $operationStatus += Start-Cleanup },
@@ -277,6 +282,7 @@ function Initialize-Tasks {
                 { Write-Host "Performing all tasks." },
                 { Write-Host "Perform Pre-Operation Tasks" },
                 { Start-DefenderScan },
+                { Start-WindowsMaintenance },
                 { Start-Backup -source $source -destination $destination },
                 { $operationStatus += Start-Repair },
                 { $operationStatus += Start-WinGetUpdate },
