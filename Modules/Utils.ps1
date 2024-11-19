@@ -232,12 +232,11 @@ function Start-WindowsMaintenance {
     # Trigger Automatic Maintenance
     try {
         if (-not $global:MaintenanceScanRunOnce) {
-            Write-Host "Starting Windows Defender Quick Scan..." -ForegroundColor Green
-            
+            Write-Host "Starting Windows Automatic Maintenance..." -ForegroundColor Green            
             & 'C:\Windows\System32\MSchedExe.exe' Start
             Write-Host "Windows Automatic Maintenance started successfully."
             Write-Log -logFileName "maintenance_scan_log" -message "Windows Automatic Maintenance started successfully." -functionName $MyInvocation.MyCommand.Name
-            Watch-WindowsMaintenance -TimeoutMinutes 120
+            Watch-WindowsMaintenance -TimeoutMinutes 30 -MaxAttempts 120 -MaxWaitSeconds 10
     
             # Set the flag to true after the first run
             $global:MaintenanceScanRunOnce = $true
@@ -254,42 +253,25 @@ function Start-WindowsMaintenance {
     }
 }
 
-# Function Name: Watch-WindowsMaintenance
+# Function Name: Watch-WindowsMaintenance#
 # Description:
-#   This function monitors the status of a specific executable (MSchedExe.exe) by checking if it is running, based on its full file path.
-#   The function will continue monitoring until the executable is no longer running or an optional timeout is reached.
-#   It uses PowerShell's `Get-Process` cmdlet combined with filtering by the process path to determine if the executable is active.
-#
+#   This function checks if any Windows maintenance processes are currently running.
+#   It waits for them to complete before proceeding, utilizing a configurable timeout,
+#   maximum attempts, and an exponential backoff wait mechanism.
 # Parameters:
-#   [int]$TimeoutMinutes - Optional. The maximum time, in minutes, to monitor the executable. Defaults to no timeout, meaning the function
-#                          will run indefinitely until the executable stops running.
-#
-# Logging:
-#   The function logs its activity to predefined log files using a custom logging function (`Write-Log`), including status updates
-#   and error messages if applicable.
-#
-# Logic:
-#   1. Checks for the running status of `MSchedExe.exe` using `Get-Process` and filters by its full path.
-#   2. Logs whether the executable is running or not.
-#   3. Implements a timeout mechanism if the `$TimeoutMinutes` parameter is provided.
-#   4. Uses exponential backoff to wait between checks, capping the delay at 5 minutes.
-#
-# Returns:
-#   None. The function writes status messages to the console and logs.
-#
-# Usage Examples:
-#   # Run indefinitely until the executable stops running:
-#   Watch-WindowsMaintenance
-#
-#   # Monitor for a maximum of 60 minutes:
-#   Watch-WindowsMaintenance -TimeoutMinutes 60
-#
+#   - TimeoutMinutes (int): The maximum time (in minutes) to wait for the maintenance processes to finish. Default is 0 (no timeout).
+#   - MaxAttempts (int): The maximum number of attempts to check the maintenance processes before giving up. Default is 10.
+#   - MaxWaitSeconds (int): The maximum wait time (in seconds) between attempts, used in the exponential backoff mechanism. Default is 300 seconds.
+# Usage:
+#   Watch-WindowsMaintenance -TimeoutMinutes 30 -MaxAttempts 5 -MaxWaitSeconds 120
 # Notes:
-#   - Ensure you have appropriate permissions to access process details and the executable's path.
-#   - Modify the executable path in the function (`C:\Windows\System32\MSchedExe.exe`) if monitoring a different executable.
+#   - The function logs messages about its progress and any errors that occur.
+#   - If the maintenance processes are still running after reaching the timeout or max attempts, it stops and logs the relevant information.
 function Watch-WindowsMaintenance {
     param (
-        [int]$TimeoutMinutes = 0
+        [int]$TimeoutMinutes = 0,
+        [int]$MaxAttempts = 10, # Set a maximum number of attempts to prevent infinite looping
+        [int]$MaxWaitSeconds = 10  # Set a configurable maximum wait time (in seconds) for exponential backoff
     )
 
     Write-Host "Checking the status of Maintenance..."
@@ -298,19 +280,36 @@ function Watch-WindowsMaintenance {
     $startTime = Get-Date
     $attempt = 0
 
-    while ($true) {
-        # Check if the executable is running by its path
-        if (Get-Process | Where-Object { $_.Path -eq 'C:\Windows\System32\MSchedExe.exe' }) {
-            Write-Host "Waiting on Maintenance to complete"
-            Write-Log -logFileName "maintenance_scan_log" -message "Waiting on Maintenance to complete" -functionName $MyInvocation.MyCommand.Name
+    # List of common maintenance processes
+    $maintenanceProcesses = @(           
+        'defrag', # Disk Defragmenter
+        'cleanmgr', # Disk Cleanup
+        'dfrgui' # Optimize Drives (Disk Defragmenter GUI)
+    )
+
+    while ($attempt -lt $MaxAttempts) {
+        try {
+            # Check if any of the maintenance processes are running
+            $runningProcesses = Get-Process -ErrorAction Stop | Where-Object { $maintenanceProcesses -contains $_.Name }
         }
-        elseif (Get-Process -Name 'defrag' -ErrorAction SilentlyContinue) {
-            Write-Host "Waiting on Maintenance to complete"
-            Write-Log -logFileName "maintenance_scan_log" -message "Waiting on Maintenance to complete" -functionName $MyInvocation.MyCommand.Name
+        catch {
+            Write-Log -logFileName "maintenance_scan_log" -message "Error occurred while checking maintenance processes: $_" -functionName $MyInvocation.MyCommand.Name
+            Start-Sleep -Seconds 5
+            continue
+        }
+        
+        if ($runningProcesses.Count -gt 0) {
+            Write-Host -NoNewline "Waiting on Maintenance to complete"
+            for ($i = 0; $i -lt 25; $i++) {
+                Start-Sleep -Seconds 1
+                Write-Host -NoNewline "."
+            }
+            Write-Host ""
+            Write-Log -logFileName "maintenance_scan_log" -message "Waiting on Maintenance to complete: $($runningProcesses.Name -join ', ')" -functionName $MyInvocation.MyCommand.Name
         }
         else {
             Write-Host "Maintenance is not running."
-            Write-Log -logFileName "maintenance_scan_log" -message "MSchedExe.exe or defrag is not running." -functionName $MyInvocation.MyCommand.Name
+            Write-Log -logFileName "maintenance_scan_log" -message "Maintenance processes are not running." -functionName $MyInvocation.MyCommand.Name
             break
         }
 
@@ -325,9 +324,14 @@ function Watch-WindowsMaintenance {
         }
 
         # Wait before checking again using exponential backoff
-        $sleepSeconds = [math]::Min([math]::Pow(2, $attempt), 300)  # Cap the wait time at 300 seconds (5 minutes)
+        $sleepSeconds = [math]::Min([math]::Pow(2, $attempt), $MaxWaitSeconds)  # Cap the wait time using configurable maximum wait time
         Start-Sleep -Seconds $sleepSeconds
         $attempt++
+    }
+
+    if ($attempt -ge $MaxAttempts) {
+        Write-Host "Maximum number of attempts reached. Exiting."
+        Write-Log -logFileName "maintenance_scan_log" -message "Maximum number of attempts reached. Exiting." -functionName $MyInvocation.MyCommand.Name
     }
 
     Write-Host "Maintenance has completed."
