@@ -281,11 +281,17 @@ function Watch-WindowsMaintenance {
     $attempt = 0
 
     # List of common maintenance processes
-    $maintenanceProcesses = @(           
+    $maintenanceProcesses = @(
         'defrag', # Disk Defragmenter
         'cleanmgr', # Disk Cleanup
-        'dfrgui' # Optimize Drives (Disk Defragmenter GUI)
+        'dfrgui', # Optimize Drives (Disk Defragmenter GUI)
+        'sfc', # System File Checker
+        'dism', # Deployment Image Servicing and Management
+        'scheduledefrag', # Automatic Scheduled Defragmentation
+        'mrt', # Microsoft Malicious Software Removal Tool
+        'mpcmdrun'       # Windows Defender (Command Line)
     )
+
 
     while ($attempt -lt $MaxAttempts) {
         try {
@@ -299,10 +305,19 @@ function Watch-WindowsMaintenance {
         }
         
         if ($runningProcesses.Count -gt 0) {
-            Write-Host -NoNewline "Waiting on Maintenance to complete"
-            for ($i = 0; $i -lt 25; $i++) {
-                Start-Sleep -Seconds 1
-                Write-Host -NoNewline "."
+            $operation = "Maintenance in progress"
+            $progressBarLength = 50
+            $totalProgress = 100
+
+            for ($i = 1; $i -le $totalProgress; $i++) {
+                $progressFill = [int](($i / $totalProgress) * $progressBarLength)
+                $emptyFill = $progressBarLength - $progressFill
+                $progressBar = '█' * $progressFill + '-' * $emptyFill
+                $bytesProcessed = "$(570 + $i)/570"
+                $elapsedTime = (Get-Date) - $startTime
+                $timeProcessed = "[$($elapsedTime.ToString('hh\:mm\:ss'))]"
+                Write-Host -NoNewline "`r${operation}: $i%|$progressBar| $bytesProcessed $timeProcessed"
+                Start-Sleep -Milliseconds 100
             }
             Write-Host ""
             Write-Log -logFileName "maintenance_scan_log" -message "Waiting on Maintenance to complete: $($runningProcesses.Name -join ', ')" -functionName $MyInvocation.MyCommand.Name
