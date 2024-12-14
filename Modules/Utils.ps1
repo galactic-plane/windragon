@@ -14,23 +14,43 @@ function ResetConsoleScreen {
     [System.Console]::Clear()
 }
 
-# Initializes the settings by creating a settings file with default values if it doesn't exist.
-# Returns the settings read from the settings file.
+# SYNOPSIS
+# Initializes a settings file for managing backup sources and destinations.
+# DESCRIPTION
+# This function checks if a JSON settings file exists in the current directory. 
+# If the file does not exist, it creates one with default values for multiple backup 
+# sources and destinations. The function then reads and returns the settings.
+# PARAMETERS
+# None
+# OUTPUTS
+# A PowerShell object containing the settings read from the JSON file.
+# NOTES
+# - Default settings include arrays for multiple sources and destinations.
+# - The settings file is saved in JSON format for easy modification and readability.
+# EXAMPLE
+# $settings = Initialize-Settings
+# $sources = $settings.sources
+# $destinations = $settings.destinations
 function Initialize-Settings {
-    # Create a settings file for default paths
+    # Path to the settings file
     $settingsFilePath = "settings.json"
 
-    # Check if settings file exists, if not, create it with default values
+    # Check if the settings file exists
     if (-not (Test-Path $settingsFilePath)) {
+        # Default settings for multiple sources and destinations
         $defaultSettings = @{
-            defaultSource      = "D:\\"
-            defaultDestination = "B:\\DayAfter"
+            sources      = @("D:\", "Z:\")
+            destinations = @("B:\DDrive", "B:\ZDrive")
         }
-        ($defaultSettings | ConvertTo-Json -Depth 3) | Set-Content -Path $settingsFilePath
+
+        # Convert settings to JSON and save to file
+        ($defaultSettings | ConvertTo-Json -Depth 3 -Compress) | Set-Content -Path $settingsFilePath
+
+        # Inform the user that a settings file was created
         Write-Host "Settings file created at $settingsFilePath with default values."
     }
 
-    # Read settings from the settings file
+    # Read settings from the JSON file and return as a PowerShell object
     $settings = Get-Content -Path $settingsFilePath | ConvertFrom-Json
     return $settings
 }

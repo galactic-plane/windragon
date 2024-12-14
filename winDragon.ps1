@@ -47,7 +47,7 @@ $global:MaintenanceScanRunOnce = $false
 #####################################
 # Functions for backup operations:
 # - Get-BackupPaths: Prompts the user to enter the source and destination directories for a backup operation.
-# - Start-Backup: Initiates a backup operation using Robocopy to copy files from a source directory to a destination directory.
+# - Invoke-All-Backups: Initiates a backup operation using Robocopy to copy files from the source directory to a destination directory from settings file.
 
 #####################################
 # Import the Repair Module
@@ -203,8 +203,7 @@ function Show-Menu {
 function Initialize-Tasks {
     param (
         [string]$choice,
-        [string]$source = "",
-        [string]$destination = ""
+        [object]$settings
     )
     $tasks = @()
     switch ($choice) {
@@ -214,7 +213,7 @@ function Initialize-Tasks {
                 { Write-Host "Perform Pre-Backup Tasks" },
                 { Start-DefenderScan -ScanType QuickScan },
                 { Write-Host "Performing Mirror Backup." },
-                { $operationStatus += Start-Backup -source $source -destination $destination }
+                { $operationStatus += Invoke-All-Backups -settings $settings }
             )
         }
         "2" {
@@ -285,7 +284,7 @@ function Initialize-Tasks {
                 { Write-Host "Perform Pre-Operation Tasks" },
                 { Start-DefenderScan -ScanType QuickScan },
                 { Start-WindowsMaintenance },
-                { Start-Backup -source $source -destination $destination },
+                { Invoke-All-Backups -settings $settings },
                 { $operationStatus += Start-Repair },
                 { $operationStatus += Start-WinGetUpdate },
                 { $operationStatus += Start-Cleanup },
@@ -319,21 +318,18 @@ if ($confirmation -ne 'Y') {
     exit
 }
 
+# Initialize the settings file
+$settings = Initialize-Settings
+
 # Main script loop
 do {
 
     $global:ErrorRecords = @()
     $operationStatus = @()
 
-    $choice = Show-Menu
+    $choice = Show-Menu    
 
-    if ($choice -eq "1" -or $choice -eq "9") {
-        $paths = Get-BackupPaths
-        $source = $paths[0]
-        $destination = $paths[1]
-    }
-
-    $tasks = Initialize-Tasks -choice $choice -source $source -destination $destination
+    $tasks = Initialize-Tasks -choice $choice -settings $settings
 
     if ($tasks) {
         Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2

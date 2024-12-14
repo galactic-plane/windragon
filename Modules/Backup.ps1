@@ -1,27 +1,3 @@
-$settings = Initialize-Settings
-
-# Function: Get-BackupPaths
-# Description: This function prompts the user to enter the source and destination directories for a backup operation.
-# If the user does not provide input, the function will use default values obtained from a settings file.
-# Parameters:
-#   - [string] $defaultSource: Default source directory for backup (retrieved from the settings file).
-#   - [string] $defaultDestination: Default destination directory for backup (retrieved from the settings file).
-# Returns:
-#   - An array containing the source and destination directory paths.
-function Get-BackupPaths {
-    param (
-        [string]$defaultSource = $settings.defaultSource,
-        [string]$defaultDestination = $settings.defaultDestination
-    )
-    $source = Read-Host "Enter the source directory for backup (default: $defaultSource)"
-    $destination = Read-Host "Enter the destination directory for backup (default: $defaultDestination)"
-    
-    if (-not $source) { $source = $defaultSource }
-    if (-not $destination) { $destination = $defaultDestination }
-
-    return @($source, $destination)
-}
-
 # Function to start backup tasks
 #
 # Function: Start-Backup
@@ -41,17 +17,33 @@ function Start-Backup {
         [string]$destination
     )
             
-    # Validate source and destination paths
+   # Validate and create source and destination paths
     if (-not [System.IO.Directory]::Exists($source)) {
-        Write-Log -logFileName "backup_error_log" -message "Error: Source path '$source' is invalid or does not exist." -functionName $MyInvocation.MyCommand.Name
-        Show-Message "Error: Source path '$source' is invalid or does not exist."
-        return "Robocopy Backup: Failed due to invalid source path."
+        try {
+            Write-Host "Source path '$source' does not exist. Attempting to create it..."
+            New-Item -ItemType Directory -Path $source | Out-Null
+            Write-Log -logFileName "backup_log" -message "Source path '$source' was missing and has been created." -functionName $MyInvocation.MyCommand.Name
+            Show-Message "Source path '$source' was missing and has been created."
+        }
+        catch {
+            Write-Log -logFileName "backup_error_log" -message "Error: Failed to create source path '$source'. $_" -functionName $MyInvocation.MyCommand.Name
+            Show-Message "Error: Failed to create source path '$source'."
+            return "Robocopy Backup: Failed to create source path."
+        }
     }
-    
-    if (-not [System.IO.Directory]::Exists($destination)) {        
-        Write-Log -logFileName "backup_error_log" -message "Error: Destination path '$destination' is invalid or does not exist." -functionName $MyInvocation.MyCommand.Name
-        Show-Message "Error: Destination path '$destination' is invalid or does not exist."
-        return "Robocopy Backup: Failed due to invalid destination path."
+
+    if (-not [System.IO.Directory]::Exists($destination)) {
+        try {
+            Write-Host "Destination path '$destination' does not exist. Attempting to create it..."
+            New-Item -ItemType Directory -Path $destination | Out-Null
+            Write-Log -logFileName "backup_log" -message "Destination path '$destination' was missing and has been created." -functionName $MyInvocation.MyCommand.Name
+            Show-Message "Destination path '$destination' was missing and has been created."
+        }
+        catch {
+            Write-Log -logFileName "backup_error_log" -message "Error: Failed to create destination path '$destination'. $_" -functionName $MyInvocation.MyCommand.Name
+            Show-Message "Error: Failed to create destination path '$destination'."
+            return "Robocopy Backup: Failed to create destination path."
+        }
     }
     
     Show-Message "Starting the backup using Robocopy from $source to $destination..."
@@ -118,5 +110,33 @@ function Start-Backup {
         Catcher -taskName "Backup" -errorMessage $_.Exception.Message
         Show-Error "Robocopy Backup: Failed due to an unexpected error. Please check the log for more information."
         return "Robocopy Backup: Failed due to an unexpected error. Please check the log for more information."
+    }
+}
+
+# Function: Invoke-All-Backups
+# Description: Iterates through all source-destination pairs defined in the settings and performs backups.
+# Parameters:
+#   [object]$settings: The settings object containing sources and destinations.
+# Returns:
+#   - None
+function Invoke-All-Backups {
+    param (
+        [object]$settings
+    )
+
+    $sources = $settings.sources
+    $destinations = $settings.destinations
+
+    if ($sources.Count -ne $destinations.Count) {
+        Write-Host "Error: The number of sources and destinations must match."
+        return
+    }
+
+    for ($i = 0; $i -lt $sources.Count; $i++) {
+        $source = $sources[$i]
+        $destination = $destinations[$i]
+
+        Write-Host "Starting backup for Source: $source -> Destination: $destination"
+        Start-Backup -source $source -destination $destination
     }
 }

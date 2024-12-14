@@ -5,9 +5,10 @@
 This script provides an interactive menu-driven interface for performing various maintenance tasks on a Windows machine. Tasks include backup, repair, cleanup, drive optimization, or all tasks sequentially.
 
 ## 🖥️ Supported Operating Systems
+- Windows 10
 - Windows 11
 
-**Note:** This script relies on PowerShell commands and tools like DISM, Robocopy, and SFC, which are supported on the above-listed versions of Windows.
+**Note:** This script relies on PowerShell commands and tools like DISM, Robocopy, SFC, and WinGet, which are supported on the above-listed versions of Windows.
 
 ## 🚀 How to Run the Script
 1. Open PowerShell as an Administrator.
@@ -20,6 +21,7 @@ This script provides an interactive menu-driven interface for performing various
 - PowerShell 7.4.6 or newer
 - Administrator privileges to perform system-level operations like repair, cleanup, and optimization.
 - Internet connection for software updates and online searches.
+- Windows Defender enabled for virus scanning.
 
 ## 🌟 Features
 - **🔄 Mirror Backup:** Uses Robocopy to create a mirror backup of specified directories.
@@ -30,6 +32,7 @@ This script provides an interactive menu-driven interface for performing various
 - **ℹ️ System Information:** Collects and displays detailed system information.
 - **📊 Event Log Analysis:** Analyzes system event logs for errors and warnings.
 - **🔍 Online Search:** Generates a Bing search URL for the given information.
+- **🛡️ Virus Scan:** Runs a virus scan using Windows Defender.
 
 ## 🔧 Functions
 ### 🐉 Show-Dragon
@@ -56,7 +59,7 @@ Logs messages to a specified log file located in a dated folder.
 ### 🛡️ Start-DefenderScan
 Runs a virus scan using Windows Defender based on the current status.
 
-### 🔄 Start-Backup
+### 🔄 Invoke-All-Backups
 Initiates a backup operation using Robocopy.
 
 ### 🔧 Start-Repair
@@ -81,7 +84,7 @@ Generates a Bing search URL for the given information.
 Analyzes system event logs for errors and warnings.
 
 ## ⚠️ Disclaimer
-You are running this script at your own risk. Please ensure you have backups of your important data before running any maintenance tasks.
+You are running this script at your own risk. Please ensure you have backups of your important data before running any maintenance tasks. Ensure Windows Defender is enabled for virus scanning.
 
 ## 📜 License
 This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
