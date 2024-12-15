@@ -1,44 +1,112 @@
-# Function to install and update WinGet
-#
-# Function: Start-WinGetUpdate
-# Description: This function installs WinGet if it is not already installed or if the installed version is outdated.
-#              It downloads necessary dependencies to ensure functionality.
-#              If WinGet is already installed and up to date, it proceeds to update all packages using WinGet.
-#              Each step includes detailed error handling and logging to help diagnose any issues.
-# Usage:
-#   Start-WinGetUpdate
-function Start-WinGetUpdate {
-    Show-Message "Starting Winget Update"
-    try {
-        # Attempt to run WinGet
-        Show-Message "Checking for WinGet installation..."
-        Start-Process -FilePath "winget" -ArgumentList "--version" -NoNewWindow -Wait -PassThru -ErrorAction Stop
-    }
-    catch {
-        # If WinGet is not installed, notify the user
-        Show-Error "WinGet is not installed on this system. Please install WinGet to continue."
-        Catcher -taskName "Start-WinGetUpdate" -errorMessage $_.Exception.Message
-        Write-Log -logFileName "winget_update_errors" -message "WinGet is not installed on this system." -functionName $MyInvocation.MyCommand.Name
-        return "WinGet is not installed on this system."
+# Function: Update-AllPackages
+# Description: Updates all installed packages from various package managers.
+# Parameters: None
+# Usage: Update-AllPackages
+function Update-AllPackages {
+    # Helper function for logging
+    function Log {
+        param([string]$Message)
+        Write-Host $Message -ForegroundColor Green
     }
 
-    # Run WinGet update to update all installed packages
-    try {      
-        Show-Message "Running winget update to update all installed packages..."
-        $wingetProcess = Start-Process -FilePath "winget" -ArgumentList "update --all --include-unknown --accept-source-agreements --ignore-warnings --disable-interactivity --verbose-logs" -NoNewWindow -Wait -PassThru -ErrorAction Stop
-        if ($wingetProcess.ExitCode -ne 0) {
-            throw "winget update process failed with exit code $($wingetProcess.ExitCode)."
+    # Update Winget packages
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        Log "Updating Winget packages..."
+        try {
+            winget upgrade --all --accept-source-agreements --ignore-warnings --disable-interactivity
+        } catch {
+            Write-Host "Error updating Winget packages: $_" -ForegroundColor Red
         }
-        Write-Log -logFileName "winget_update" -message "winget update completed successfully." -functionName $MyInvocation.MyCommand.Name  
-        Show-Message "Winget update completed successfully."
-        return "Winget update completed successfully."
+    } else {
+        Write-Host "Winget is not installed." -ForegroundColor Yellow
     }
-    catch {
-        # Log the error message if the WinGet update process fails
-        $errorDetails = $_.Exception | Out-String
-        Catcher -taskName "Start-WinGetUpdate" -errorMessage $_.Exception.Message
-        Write-Log -logFileName "winget_update_errors" -message "winget update failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
-        Show-Error "Winget update failed. Please check the log file for more details."
-        return "Winget update failed. Please check the log file for more details."
+
+    # Update Chocolatey packages
+    if (Get-Command choco -ErrorAction SilentlyContinue) {
+        Log "Updating Chocolatey packages..."
+        try {
+            choco upgrade all -y
+        } catch {
+            Write-Host "Error updating Chocolatey packages: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "Chocolatey is not installed." -ForegroundColor Yellow
+    }
+
+    # Update Scoop packages
+    if (Get-Command scoop -ErrorAction SilentlyContinue) {
+        Log "Updating Scoop packages..."
+        try {
+            scoop update
+            scoop update *
+        } catch {
+            Write-Host "Error updating Scoop packages: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "Scoop is not installed." -ForegroundColor Yellow
+    }
+
+   # Update Pip packages
+    if (Get-Command pip -ErrorAction SilentlyContinue) {
+        Log "Updating Pip packages..."
+        try {
+            pip list --outdated --format=columns | ForEach-Object {
+                $columns = $_ -split '\s+'
+                if ($columns[0] -ne "Package" -and $columns[0] -ne "---") {
+                    $package = $columns[0]
+                    Log "Updating Pip package: $package"
+                    pip install --upgrade $package
+                }
+            }
+        } catch {
+            Write-Host "Error updating Pip packages: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "Pip is not installed." -ForegroundColor Yellow
+    }
+
+    # Update Npm packages
+    if (Get-Command npm -ErrorAction SilentlyContinue) {
+        Log "Updating global npm packages..."
+        try {
+            npm update -g
+        } catch {
+            Write-Host "Error updating global npm packages: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "Npm is not installed." -ForegroundColor Yellow
+    }
+
+    # Update .NET Tools
+    if (Get-Command dotnet -ErrorAction SilentlyContinue) {
+        Log "Updating .NET global tools..."
+        try {
+            dotnet tool update --global --all
+        } catch {
+            Write-Host "Error updating .NET global tools: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host ".NET SDK is not installed." -ForegroundColor Yellow
+    }
+
+    # Update PowerShell modules
+    if (Get-Command Update-Module -ErrorAction SilentlyContinue) {
+        Log "Updating PowerShell modules..."
+        try {
+            $response = Read-Host "Are you sure you want to update all PowerShell modules? This may affect compatibility. (Y/N)"
+            if ($response -eq 'Y') {
+                Get-InstalledModule | ForEach-Object {
+                    $module = $_.Name
+                    Log "Updating PowerShell module: $module"
+                    Update-Module -Name $module -Force
+                }
+            } else {
+                Write-Host "Skipping PowerShell module updates." -ForegroundColor Yellow
+            }
+        } catch {
+            Write-Host "Error updating PowerShell modules: $_" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "PowerShellGet module is not installed." -ForegroundColor Yellow
     }
 }

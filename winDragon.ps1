@@ -61,7 +61,7 @@ $global:MaintenanceScanRunOnce = $false
 . .\Modules\Update.ps1
 #####################################
 # Functions for updating installed software:
-# - Start-WinGetUpdate: Installs WinGet if it is not already installed or if the installed version is outdated, and updates all installed packages.
+# - Update-AllPackages: Installs WinGet if it is not already installed or if the installed version is outdated, and updates all installed packages.
 
 #####################################
 # Import the Cleanup Module
@@ -231,7 +231,7 @@ function Initialize-Tasks {
                 { Write-Host "Perform Pre-UpdateApps Tasks" },
                 { Start-DefenderScan -ScanType QuickScan },
                 { Start-WindowsMaintenance },
-                { $operationStatus += Start-WinGetUpdate }
+                { $operationStatus += Update-AllPackages }
             )
         }
         "4" {
@@ -271,7 +271,7 @@ function Initialize-Tasks {
                 { Start-DefenderScan -ScanType QuickScan },
                 { Start-WindowsMaintenance },
                 { $operationStatus += Start-Repair },
-                { $operationStatus += Start-WinGetUpdate },
+                { $operationStatus += Update-AllPackages },
                 { $operationStatus += Start-Cleanup },
                 { $operationStatus += Start-Optimization },
                 { Start-PCInfo },
@@ -286,7 +286,7 @@ function Initialize-Tasks {
                 { Start-WindowsMaintenance },
                 { Invoke-All-Backups -settings $settings },
                 { $operationStatus += Start-Repair },
-                { $operationStatus += Start-WinGetUpdate },
+                { $operationStatus += Update-AllPackages },
                 { $operationStatus += Start-Cleanup },
                 { $operationStatus += Start-Optimization },
                 { Start-PCInfo },

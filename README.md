@@ -5,7 +5,6 @@
 This script provides an interactive menu-driven interface for performing various maintenance tasks on a Windows machine. Tasks include backup, repair, cleanup, drive optimization, or all tasks sequentially.
 
 ## 🖥️ Supported Operating Systems
-- Windows 10
 - Windows 11
 
 **Note:** This script relies on PowerShell commands and tools like DISM, Robocopy, SFC, and WinGet, which are supported on the above-listed versions of Windows.
@@ -65,9 +64,6 @@ Initiates a backup operation using Robocopy.
 ### 🔧 Start-Repair
 Performs a series of system repair tasks using various system tools.
 
-### 📦 Start-WinGetUpdate
-Installs or updates WinGet and updates all installed packages.
-
 ### 🧹 Start-Cleanup
 Executes an advanced disk cleanup using the built-in Windows tool.
 
@@ -83,6 +79,21 @@ Generates a Bing search URL for the given information.
 ### 📊 Start-EventLogAnalysis
 Analyzes system event logs for errors and warnings.
 
+### 🔄 Update-AllPackages
+Updates all installed packages using various package managers including Winget, Chocolatey, Scoop, Pip, Npm, .NET Tools, and PowerShell modules.
+
+### 🛠️ Initialize-Settings
+Initializes a settings file for managing backup sources, destinations, and common `.gitignore` items.
+
+### 🛠️ Start-WindowsMaintenance
+Initiates the Windows maintenance process by ensuring the Task Scheduler service is running and triggers Windows Automatic Maintenance.
+
+### 🛠️ Watch-WindowsMaintenance
+Checks if any Windows maintenance processes are currently running and waits for them to complete before proceeding.
+
+### 🛠️ Show-ProgressBar
+Displays a progress bar while executing a series of tasks sequentially.
+
 ## ⚠️ Disclaimer
 You are running this script at your own risk. Please ensure you have backups of your important data before running any maintenance tasks. Ensure Windows Defender is enabled for virus scanning.
 
@@ -91,4 +102,3 @@ This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) 
 
 ## 👤 Author
 Daniel Penrod
-
