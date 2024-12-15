@@ -1,23 +1,39 @@
-# Function to start backup tasks
+# Function Name: Start-Backup
 #
-# Function: Start-Backup
-# Description: This function initiates a backup operation using Robocopy to copy files from a source directory to a destination directory.
-#              It validates the paths before starting the backup, executes the Robocopy command, and handles different exit codes to
-#              provide meaningful feedback about the success or failure of the backup process. Additionally, it logs any errors that occur.
+# Description:
+# This function performs a backup operation using Robocopy. It validates the
+# existence of the source and destination directories, creates them if they
+# do not exist, and then executes Robocopy to mirror the source to the
+# destination. The function also dynamically applies exclusions from the
+# backupnore settings provided in the $excludedDirs parameter.
+#
 # Parameters:
-#   [string]$source - The path to the source directory that will be backed up.
-#   [string]$destination - The path to the destination directory where the backup will be stored.
-# Returns:
-#   A string message indicating the status of the backup, including success, failure, or issues encountered.
-# Usage:
-#   Start-Backup -source "C:\SourceFolder" -destination "D:\DestinationFolder"
+# - source (string): The source directory for the backup.
+# - destination (string): The destination directory for the backup.
+# - $excludedDirs (string): A backupnore list, which specifies directories and file patterns to exclude.
+#
+# Features:
+# - Validates and creates source/destination paths if they do not exist.
+# - Logs the operation and handles errors gracefully.
+# - Dynamically applies exclusions based on backupnore settings.
+#
+# Exit Codes (from Robocopy):
+# - 0: No errors, no files copied.
+# - 1: Some files copied successfully.
+# - 2: Extra files or directories detected.
+# - >2: Issues such as mismatched files or errors occurred.
+#
+# Example Usage:
+# $settings = Initialize-Settings
+# Start-Backup -source "C:\Source" -destination "D:\Backup" -excludedDirs $excludedDirs
 function Start-Backup {
     param (
         [string]$source,
-        [string]$destination
+        [string]$destination,
+        [string]$excludedDirs
     )
-            
-   # Validate and create source and destination paths
+
+    # Validate and create source and destination paths
     if (-not [System.IO.Directory]::Exists($source)) {
         try {
             Write-Host "Source path '$source' does not exist. Attempting to create it..."
@@ -49,7 +65,8 @@ function Start-Backup {
     Show-Message "Starting the backup using Robocopy from $source to $destination..."
     Write-Log -logFileName "backup_log" -message "Starting the backup using Robocopy from $source to $destination..." -functionName $MyInvocation.MyCommand.Name
     try {
-        $robocopyProcess = Start-Process -FilePath "robocopy" -ArgumentList "${source} ${destination} /MIR /FFT /Z /XA:H /W:5 /A-:SH" -NoNewWindow -Wait -PassThru
+        $robocopyArgs = "${source} ${destination} /MIR /FFT /Z /XA:H /W:5 /A-:SH /XD $excludedDirs"
+        $robocopyProcess = Start-Process -FilePath "robocopy" -ArgumentList $robocopyArgs -NoNewWindow -Wait -PassThru
         switch ($robocopyProcess.ExitCode) {
             0 {                
                 Write-Log -logFileName "backup_log" -message "Backup complete with no errors. Exit code: 0" -functionName $MyInvocation.MyCommand.Name
@@ -66,45 +83,14 @@ function Start-Backup {
                 Show-Message "Extra files or directories were detected. Exit code: 2"
                 return "Robocopy Backup: Completed with extra files/directories, Exit code: 2"
             }
-            3 {                
-                Write-Log -logFileName "backup_log" -message "Some files were copied and extra files were detected. Exit code: 3" -functionName $MyInvocation.MyCommand.Name
-                Show-Message "Some files were copied and extra files were detected. Exit code: 3"
-                return "Robocopy Backup: Completed with some issues, Exit code: 3"
-            }
-            5 {               
-                Write-Log -logFileName "backup_log" -message "Some files were mismatched. No files were copied. Exit code: 5" -functionName $MyInvocation.MyCommand.Name
-                Show-Message "Some files were mismatched. No files were copied. Exit code: 5"
-                return "Robocopy Backup: Completed with mismatched files, Exit code: 5"
-            }
-            6 {                
-                Write-Log -logFileName "backup_log" -message "Additional files or directories were detected and mismatched. Exit code: 6" -functionName $MyInvocation.MyCommand.Name
-                Show-Message "Additional files or directories were detected and mismatched. Exit code: 6"
-                return "Robocopy Backup: Completed with mismatched files and extra files, Exit code: 6"
-            }
-            7 {                
-                Write-Log -logFileName "backup_log" -message "Files were copied, mismatched, and extra files were detected. Exit code: 7" -functionName $MyInvocation.MyCommand.Name
-                Show-Message "Files were copied, mismatched, and extra files were detected. Exit code: 7"
-                return "Robocopy Backup: Completed with several issues, Exit code: 7"
-            }
-            8 {               
-                Write-Log -logFileName "backup_log" -message "Backup completed with some files/directories mismatch. Exit code: 8" -functionName $MyInvocation.MyCommand.Name
-                Show-Message "Backup completed with some files/directories mismatch. Exit code: 8"
-                return "Robocopy Backup: Completed with issues, Exit code: 8"
-            }
-            16 {                
-                Write-Log -logFileName "backup_log" -message "Backup completed with serious errors. Exit code: 16" -functionName $MyInvocation.MyCommand.Name
-                Show-Message "Backup completed with serious errors. Exit code: 16"
-                return "Robocopy Backup: Completed with serious errors, Exit code: 16"
-            }
             default {                
-                Write-Log -logFileName "backup_log" -message "Backup completed with some issues. Exit code: $($robocopyProcess.ExitCode)" -functionName $MyInvocation.MyCommand.Name
-                Show-Message "Backup completed with some issues. Exit code: $($robocopyProcess.ExitCode)"
+                Write-Log -logFileName "backup_log" -message "Backup completed with issues. Exit code: $($robocopyProcess.ExitCode)" -functionName $MyInvocation.MyCommand.Name
+                Show-Message "Backup completed with issues. Exit code: $($robocopyProcess.ExitCode)"
                 return "Robocopy Backup: Completed with issues, Exit code: $($robocopyProcess.ExitCode)"
             }
         }
     }
     catch {
-        # Enhanced logging for troubleshooting
         $errorDetails = $_.Exception | Out-String       
         Write-Log -logFileName "backup_log_errors" -message "Backup failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
         Catcher -taskName "Backup" -errorMessage $_.Exception.Message
@@ -126,6 +112,7 @@ function Invoke-All-Backups {
 
     $sources = $settings.sources
     $destinations = $settings.destinations
+    $excludedDirs = $settings.backupnore -join ' '
 
     if ($sources.Count -ne $destinations.Count) {
         Write-Host "Error: The number of sources and destinations must match."
@@ -137,6 +124,6 @@ function Invoke-All-Backups {
         $destination = $destinations[$i]
 
         Write-Host "Starting backup for Source: $source -> Destination: $destination"
-        Start-Backup -source $source -destination $destination
+        Start-Backup -source $source -destination $destination -excludedDirs $excludedDirs
     }
 }
