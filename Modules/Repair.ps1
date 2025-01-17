@@ -7,7 +7,7 @@
 # Usage:
 #   Start-Repair
 function Start-Repair {
-    function Run-DISMOperation {
+    function Invoke-DISMOperation {
         param (
             [string]$OperationName,
             [string]$Arguments
@@ -24,18 +24,18 @@ function Start-Repair {
 
     try {
         # DISM CheckHealth
-        if (-not (Run-DISMOperation -OperationName "CheckHealth" -Arguments "/Online /Cleanup-Image /CheckHealth")) {
+        if (-not (Invoke-DISMOperation -OperationName "CheckHealth" -Arguments "/Online /Cleanup-Image /CheckHealth")) {
             # DISM ScanHealth
-            if (-not (Run-DISMOperation -OperationName "ScanHealth" -Arguments "/Online /Cleanup-Image /ScanHealth")) {
+            if (-not (Invoke-DISMOperation -OperationName "ScanHealth" -Arguments "/Online /Cleanup-Image /ScanHealth")) {
                 # DISM RestoreHealth
-                if (-not (Run-DISMOperation -OperationName "RestoreHealth" -Arguments "/Online /Cleanup-Image /RestoreHealth")) {
+                if (-not (Invoke-DISMOperation -OperationName "RestoreHealth" -Arguments "/Online /Cleanup-Image /RestoreHealth")) {
                     Show-Error "Failed to repair system issues. Aborting further operations. For more help, consult the official DISM documentation or contact technical support."
                 }
             }
         }
 
         # DISM StartComponentCleanup
-        if (-not (Run-DISMOperation -OperationName "StartComponentCleanup" -Arguments "/Online /Cleanup-Image /StartComponentCleanup")) {
+        if (-not (Invoke-DISMOperation -OperationName "StartComponentCleanup" -Arguments "/Online /Cleanup-Image /StartComponentCleanup")) {
             Show-Error "Repair tasks completed with issues during component cleanup. Consider reviewing the logs for more details and performing a manual cleanup if necessary."
         }
 

@@ -14,9 +14,60 @@
 # 3. Run the script by typing: `\.\WinDragon.ps1`
 # 4. Follow the interactive prompts to select the tasks you wish to perform.
 
+# Script Options and Corresponding Parameters
+
+# 1. Mirror Backup
+# Command: .\WinDragon.ps1 -RunChoice 1
+
+# 2. Repair Tasks (DISM and SFC)
+# Command: .\WinDragon.ps1 -RunChoice 2
+
+# 3. Update Installed Software
+# Command: .\WinDragon.ps1 -RunChoice 3
+
+# 4. Cleanup Tasks
+# Command: .\WinDragon.ps1 -RunChoice 4
+
+# 5. Drive Optimization
+# Command: .\WinDragon.ps1 -RunChoice 5
+
+# 6. Get System Information
+# Command: .\WinDragon.ps1 -RunChoice 6
+
+# 7. Analyze Event Logs
+# Command: .\WinDragon.ps1 -RunChoice 7
+
+# 8. Perform All Tasks (Except Mirror Backup)
+# Command: .\WinDragon.ps1 -RunChoice 8
+
+# 9. Perform All Tasks (Including Mirror Backup)
+# Command: .\WinDragon.ps1 -RunChoice 9
+
+# 10. Exit
+# This option is not applicable when using parameters.
+
+# Examples
+
+# Run Repair Tasks:
+# .\WinDragon.ps1 -RunChoice 2
+
+# Perform All Tasks Including Mirror Backup:
+# .\WinDragon.ps1 -RunChoice 9
+
+# Get System Information:
+# .\WinDragon.ps1 -RunChoice 6
+
+# Notes:
+# - Use these commands directly for automation or scheduling.
+# - Ensure PowerShell is run with administrative privileges.
+
 # Requirements:
 # - PowerShell 7.4.6 or newer
 # - Administrator privileges to perform system-level operations like repair, cleanup, and optimization.
+
+param (
+    [int]$RunChoice
+)
 
 # Function to ensure script is running with admin privileges
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
@@ -304,56 +355,70 @@ function Initialize-Tasks {
     return $tasks
 }
 
-ResetConsoleScreen
-Show-Dragon
-
-Write-Host "`n"
-
-# Display the disclaimer using Show-Message
-Show-Message "Disclaimer: You are running this script at your own risk."
-Write-Host "`n"
-$confirmation = Read-Host "Please type 'Y' to confirm: "
-if ($confirmation -ne 'Y') {
-    Show-Error "User did not confirm. Exiting script."
-    exit
-}
-
-# Initialize the settings file
-$settings = Initialize-Settings
-
-# Main script loop
-do {
-
-    $global:ErrorRecords = @()
-    $operationStatus = @()
-
-    $choice = Show-Menu    
-
-    $tasks = Initialize-Tasks -choice $choice -settings $settings
+if ($RunChoice) {
+    $settings = Initialize-Settings
+    $tasks = Initialize-Tasks -choice $RunChoice.ToString() -settings $settings
 
     if ($tasks) {
         Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
     }
-    else {
-        Write-Host "Invalid selection. Please choose an option from the menu."
+
+    exit
+}
+else {
+
+    ResetConsoleScreen
+
+    Show-Dragon
+
+    Write-Host "`n"
+
+    # Display the disclaimer using Show-Message
+    Show-Message "Disclaimer: You are running this script at your own risk."
+    Write-Host "`n"
+    $confirmation = Read-Host "Please type 'Y' to confirm: "
+    if ($confirmation -ne 'Y') {
+        Show-Error "User did not confirm. Exiting script."
+        exit
     }
 
-    if ($operationStatus) {       
-        foreach ($status in $operationStatus) {
-            if (-not ($status -is [int]) -and -not ($status -is [System.Int64])) {
-                Write-Log -logFileName "completed" -message $status -functionName $MyInvocation.MyCommand.Name
+    # Initialize the settings file
+    $settings = Initialize-Settings
+
+    # Main script loop
+    do {
+
+        $global:ErrorRecords = @()
+        $operationStatus = @()
+
+        $choice = Show-Menu    
+
+        $tasks = Initialize-Tasks -choice $choice -settings $settings
+
+        if ($tasks) {
+            Show-ProgressBar -Tasks $tasks -DelayBetweenTasks 2
+        }
+        else {
+            Write-Host "Invalid selection. Please choose an option from the menu."
+        }
+
+        if ($operationStatus) {       
+            foreach ($status in $operationStatus) {
+                if (-not ($status -is [int]) -and -not ($status -is [System.Int64])) {
+                    Write-Log -logFileName "completed" -message $status -functionName $MyInvocation.MyCommand.Name
+                }
             }
         }
-    }
 
-    if ($global:ErrorRecords.Count -gt 0) {    
-        foreach ($err in $global:ErrorRecords) {
-            if (-not ($status -is [int]) -and -not ($status -is [System.Int64])) {
-                Write-Log -logFileName "errors" -message $status -functionName $MyInvocation.MyCommand.Name
+        if ($global:ErrorRecords.Count -gt 0) {    
+            foreach ($err in $global:ErrorRecords) {
+                if (-not ($status -is [int]) -and -not ($status -is [System.Int64])) {
+                    Write-Log -logFileName "errors" -message $status -functionName $MyInvocation.MyCommand.Name
+                }
             }
         }
-    }
 
-    Pause
+        Pause
 
-} while ($true)
+    } while ($true)
+}
