@@ -93,15 +93,10 @@ function Update-AllPackages {
     if (Get-Command Update-Module -ErrorAction SilentlyContinue) {
         Log "Updating PowerShell modules..."
         try {
-            $response = Read-Host "Are you sure you want to update all PowerShell modules? This may affect compatibility. (Y/N)"
-            if ($response -eq 'Y') {
-                Get-InstalledModule | ForEach-Object {
-                    $module = $_.Name
-                    Log "Updating PowerShell module: $module"
-                    Update-Module -Name $module -Force
-                }
-            } else {
-                Write-Host "Skipping PowerShell module updates." -ForegroundColor Yellow
+            Get-InstalledModule | ForEach-Object {
+                $module = $_.Name
+                Log "Updating PowerShell module: $module"
+                Update-Module -Name $module -Force
             }
         } catch {
             Write-Host "Error updating PowerShell modules: $_" -ForegroundColor Red
