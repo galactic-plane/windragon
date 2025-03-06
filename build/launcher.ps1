@@ -17,7 +17,7 @@ $winDragonScriptPath = "https://raw.githubusercontent.com/galactic-plane/windrag
 
     # Download the script
     try {
-        Invoke-WebRequest -Uri $winDragonScriptURL -OutFile $tempFilePath -ErrorAction Stop
+        Invoke-WebRequest -Uri $winDragonScriptURL -OutFile $tempFilePath -ErrorAction Stop -Wait
         Write-Host "WinDragon script downloaded successfully." -ForegroundColor Green
     } catch {
         Write-Host "Failed to download the script: $_" -ForegroundColor Red
