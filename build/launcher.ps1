@@ -17,13 +17,13 @@ $winDragonScriptPath = "https://raw.githubusercontent.com/galactic-plane/windrag
 
     # Download the script
     try {
-        Invoke-WebRequest -Uri $winDragonScriptURL -OutFile $tempFilePath -ErrorAction Stop -Wait
+        Invoke-WebRequest -Uri $winDragonScriptURL -OutFile $tempFilePath -ErrorAction Stop
         Write-Host "WinDragon script downloaded successfully." -ForegroundColor Green
     } catch {
         Write-Host "Failed to download the script: $_" -ForegroundColor Red
         exit
     }
-    $winDragonScriptPath = $tempFilePath
+    #$winDragonScriptPath = $tempFilePath
     
 
 # Display ASCII Art in Terminal
