@@ -9,8 +9,20 @@ $asciiArt = @"
 WinDragon GUI vBeta
 "@
 
-# Define the file path for winDragon.ps1
-$winDragonScriptPath = "https://raw.githubusercontent.com/galactic-plane/windragon/refs/heads/main/build/winDragon_1.0.0.7.ps1"
+# Define the remote file URL
+$winDragonScriptURL = "https://raw.githubusercontent.com/galactic-plane/windragon/main/build/winDragon_1.0.0.7.ps1"
+
+# Define a local temporary file path
+$tempFilePath = "$env:TEMP\winDragon.ps1"
+
+# Download the script
+try {
+    Invoke-WebRequest -Uri $winDragonScriptURL -OutFile $tempFilePath -ErrorAction Stop
+    Write-Host "WinDragon script downloaded successfully." -ForegroundColor Green
+} catch {
+    Write-Host "Failed to download the script: $_" -ForegroundColor Red
+    exit
+}
 
 # Display ASCII Art in Terminal
 Write-Host $asciiArt -ForegroundColor Cyan
@@ -122,12 +134,12 @@ $buttonTitles | ForEach-Object -Process {
                     try {
                         Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
                         switch ($buttonIndex) {
-                            0 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $winDragonScriptPath, "-RunChoice", "2" -Wait }
-                            1 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $winDragonScriptPath, "-RunChoice", "3" -Wait }
-                            2 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $winDragonScriptPath, "-RunChoice", "4" -Wait }
-                            3 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $winDragonScriptPath, "-RunChoice", "5" -Wait }
-                            4 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $winDragonScriptPath, "-RunChoice", "6" -Wait }
-                            5 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $winDragonScriptPath, "-RunChoice", "7" -Wait }
+                            0 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $tempFilePath, "-RunChoice", "2" -Wait }
+                            1 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $tempFilePath, "-RunChoice", "3" -Wait }
+                            2 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $tempFilePath, "-RunChoice", "4" -Wait }
+                            3 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $tempFilePath, "-RunChoice", "5" -Wait }
+                            4 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $tempFilePath, "-RunChoice", "6" -Wait }
+                            5 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $tempFilePath, "-RunChoice", "7" -Wait }
                             6 { Write-Host "Exiting WinDragon GUI" -ForegroundColor Cyan; $window.Close() }
                             Default { Write-Host "Invalid selection" -ForegroundColor Red }
                         }

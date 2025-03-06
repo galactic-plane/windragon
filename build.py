@@ -161,7 +161,7 @@ def update_launcher_script(launcher_file, output_file):
     for line in launcher_lines:
         if '$winDragonScriptPath' in line and not found:
             # Update the winDragonScriptPath to the new output file path
-            updated_lines.append(f'$winDragonScriptPath = "{output_filename}"')
+            updated_lines.append(f'$winDragonScriptPath = "https://raw.githubusercontent.com/galactic-plane/windragon/main/build/{output_filename}"')
             found = True
         else:
             updated_lines.append(line.rstrip())
