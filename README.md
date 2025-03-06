@@ -13,10 +13,10 @@ This script provides an interactive menu-driven interface for performing various
 1. Open PowerShell as an Administrator.
 2. Run build.py and then navigate to the directory `build` where this script is located.
    - Use the `cd` command to change directories. Example: `cd build`
-3. Run the script by typing: `.\winDragon_{version}.ps1`
-4. Look in the winDragon file for parameter usage
-5. Run this in terminal (Powershell 7) to launch GUI `irm "https://raw.githubusercontent.com/galactic-plane/windragon/refs/heads/main/build/launcher.ps1" | iex`
-6. Follow the interactive prompts to select the tasks you wish to perform.
+   - Run the script by typing: `.\winDragon_{version}.ps1`
+   - Look in the winDragon file for parameter usage
+   - Follow the interactive prompts to select the tasks you wish to perform.
+3. Run Latest Build from Web: Run this in terminal (Powershell 7) to launch GUI `irm "https://raw.githubusercontent.com/galactic-plane/windragon/refs/heads/main/build/launcher.ps1" | iex`
 
 ## 📋 Requirements
 - PowerShell 7.4.6 or newer
