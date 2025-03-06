@@ -10,7 +10,7 @@ WinDragon GUI vBeta
 "@
 
 # Define the file path for winDragon.ps1
-$winDragonScriptPath = "winDragon_1.0.0.7.ps1"
+$winDragonScriptPath = "https://raw.githubusercontent.com/galactic-plane/windragon/refs/heads/main/build/winDragon_1.0.0.7.ps1"
 
 # Display ASCII Art in Terminal
 Write-Host $asciiArt -ForegroundColor Cyan
