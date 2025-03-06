@@ -25,7 +25,7 @@ This script provides an interactive menu-driven interface for performing various
 - Windows Defender enabled for virus scanning.
 
 ## 🌟 Features
-- **🔄 Mirror Backup:** Uses Robocopy to create a mirror backup of specified directories.
+- **🔄 Mirror Backup (Not in GUI):** Uses Robocopy to create a mirror backup of specified directories.
 - **🔧 Repair Tasks:** Utilizes DISM and SFC to check and repair system health.
 - **📦 Update Installed Software:** Updates all installed software using WinGet.
 - **🧹 Cleanup Tasks:** Performs advanced disk cleanup using Windows Clean Manager.
