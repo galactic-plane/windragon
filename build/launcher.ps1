@@ -10,7 +10,7 @@ WinDragon GUI vBeta
 "@
 
 # Define the file path for winDragon.ps1
-$winDragonScriptPath = "https://raw.githubusercontent.com/galactic-plane/windragon/main/build/winDragon_1.0.0.9.ps1"
+$winDragonScriptPath = "https://raw.githubusercontent.com/galactic-plane/windragon/refs/heads/main/build/winDragon_1.0.0.9.ps1"
 
 # Define a local temporary file path
 $tempFilePath = "$env:TEMP\winDragon.ps1"
