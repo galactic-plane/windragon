@@ -167,7 +167,7 @@ def update_launcher_script(launcher_file, output_file):
 
     # Download the script
     try {
-        Invoke-WebRequest -Uri $winDragonScriptURL -OutFile $tempFilePath -ErrorAction Stop
+        Invoke-WebRequest -Uri $winDragonScriptPath -OutFile $tempFilePath -ErrorAction Stop
         Write-Host "WinDragon script downloaded successfully." -ForegroundColor Green
     } catch {
         Write-Host "Failed to download the script: $_" -ForegroundColor Red
