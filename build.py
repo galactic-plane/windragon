@@ -151,6 +151,25 @@ def combine_powershell_scripts(source_file, modules_folder, output_file):
     with output_path.open('w', encoding='utf-8') as out:
         out.write('\n'.join(combined_script))
 
+def update_launcher_script(launcher_file, output_file):
+    found = False
+    # Extract the filename from the output file path
+    output_filename = Path(output_file).name
+    # Read the launcher script
+    launcher_lines = read_file(launcher_file)
+    updated_lines = []
+    for line in launcher_lines:
+        if '$winDragonScriptPath' in line and not found:
+            # Update the winDragonScriptPath to the new output file path
+            updated_lines.append(f'$winDragonScriptPath = "{output_filename}"')
+            found = True
+        else:
+            updated_lines.append(line.rstrip())
+    # Write the updated launcher script to the build directory
+    output_launcher_path = Path('build') / Path(launcher_file).name
+    with output_launcher_path.open('w', encoding='utf-8') as out:
+        out.write('\n'.join(updated_lines))
+
 if __name__ == "__main__":
     # Define source script, modules folder, and settings file
     source_file = 'winDragon.ps1'
@@ -171,6 +190,8 @@ if __name__ == "__main__":
     combine_powershell_scripts(source_file, modules_folder, output_file)
     # Update the build number in settings
     update_build_number(settings_file, settings)
+    # Update and copy the launcher script to the build directory
+    update_launcher_script('launcher.ps1', output_file)
 
     # Print the location of the combined script
     print(f"Combined script has been saved to {output_file}")

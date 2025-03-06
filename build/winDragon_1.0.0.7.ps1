@@ -1301,33 +1301,15 @@ function Start-Repair {
 
         # DISM CheckHealth
 
-        if (-not (Invoke-DISMOperation -OperationName "CheckHealth" -Arguments "/Online /Cleanup-Image /CheckHealth")) {
+        Invoke-DISMOperation -OperationName "CheckHealth" -Arguments "/Online /Cleanup-Image /CheckHealth"
 
-            # DISM ScanHealth
+        # DISM ScanHealth
 
-            if (-not (Invoke-DISMOperation -OperationName "ScanHealth" -Arguments "/Online /Cleanup-Image /ScanHealth")) {
+        Invoke-DISMOperation -OperationName "ScanHealth" -Arguments "/Online /Cleanup-Image /ScanHealth"
 
-                # DISM RestoreHealth
+        # DISM RestoreHealth
 
-                if (-not (Invoke-DISMOperation -OperationName "RestoreHealth" -Arguments "/Online /Cleanup-Image /RestoreHealth")) {
-
-                    Show-Error "Failed to repair system issues. Aborting further operations. For more help, consult the official DISM documentation or contact technical support."
-
-                }
-
-            }
-
-        }
-
-
-
-        # DISM StartComponentCleanup
-
-        if (-not (Invoke-DISMOperation -OperationName "StartComponentCleanup" -Arguments "/Online /Cleanup-Image /StartComponentCleanup")) {
-
-            Show-Error "Repair tasks completed with issues during component cleanup. Consider reviewing the logs for more details and performing a manual cleanup if necessary."
-
-        }
+        Invoke-DISMOperation -OperationName "RestoreHealth" -Arguments "/Online /Cleanup-Image /RestoreHealth"
 
 
 
@@ -1369,7 +1351,9 @@ function Start-Repair {
 
                 return "System File Checker has completed successfully."
 
-            } else {
+            }
+
+            else {
 
                 Write-Log -logFileName "sfc_log_errors" -message "SFC finished with issues. Exit code: $($sfcProcess.ExitCode)" -functionName $MyInvocation.MyCommand.Name
 
@@ -1379,7 +1363,9 @@ function Start-Repair {
 
             }
 
-        } catch {
+        }
+
+        catch {
 
             $errorDetails = $_.Exception | Out-String
 
@@ -1395,7 +1381,15 @@ function Start-Repair {
 
         }
 
-    } catch {
+
+
+        # DISM StartComponentCleanup
+
+        Invoke-DISMOperation -OperationName "StartComponentCleanup" -Arguments "/Online /Cleanup-Image /StartComponentCleanup /ResetBase"
+
+    }
+
+    catch {
 
         $errorDetails = $_.Exception | Out-String
 

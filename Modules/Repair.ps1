@@ -24,20 +24,11 @@ function Start-Repair {
 
     try {
         # DISM CheckHealth
-        if (-not (Invoke-DISMOperation -OperationName "CheckHealth" -Arguments "/Online /Cleanup-Image /CheckHealth")) {
-            # DISM ScanHealth
-            if (-not (Invoke-DISMOperation -OperationName "ScanHealth" -Arguments "/Online /Cleanup-Image /ScanHealth")) {
-                # DISM RestoreHealth
-                if (-not (Invoke-DISMOperation -OperationName "RestoreHealth" -Arguments "/Online /Cleanup-Image /RestoreHealth")) {
-                    Show-Error "Failed to repair system issues. Aborting further operations. For more help, consult the official DISM documentation or contact technical support."
-                }
-            }
-        }
-
-        # DISM StartComponentCleanup
-        if (-not (Invoke-DISMOperation -OperationName "StartComponentCleanup" -Arguments "/Online /Cleanup-Image /StartComponentCleanup")) {
-            Show-Error "Repair tasks completed with issues during component cleanup. Consider reviewing the logs for more details and performing a manual cleanup if necessary."
-        }
+        Invoke-DISMOperation -OperationName "CheckHealth" -Arguments "/Online /Cleanup-Image /CheckHealth"
+        # DISM ScanHealth
+        Invoke-DISMOperation -OperationName "ScanHealth" -Arguments "/Online /Cleanup-Image /ScanHealth"
+        # DISM RestoreHealth
+        Invoke-DISMOperation -OperationName "RestoreHealth" -Arguments "/Online /Cleanup-Image /RestoreHealth"
 
         # Running System File Checker
         Show-Message "Running System File Checker to scan and repair protected system files..."
@@ -58,12 +49,14 @@ function Start-Repair {
             if ($sfcProcess.ExitCode -eq 0) {
                 Show-Message "System File Checker has completed successfully."
                 return "System File Checker has completed successfully."
-            } else {
+            }
+            else {
                 Write-Log -logFileName "sfc_log_errors" -message "SFC finished with issues. Exit code: $($sfcProcess.ExitCode)" -functionName $MyInvocation.MyCommand.Name
                 Show-Error "SFC finished with issues. Exit code: $($sfcProcess.ExitCode). Review the logs or visit the Microsoft support page for additional help."
                 return "System File Checker finished with warnings/errors. Exit code: $($sfcProcess.ExitCode)"
             }
-        } catch {
+        }
+        catch {
             $errorDetails = $_.Exception | Out-String
             $sanitizedErrorDetails = ($errorDetails -replace "\s*at .*", "") -replace "\s*in .*", ""
             Catcher -taskName "Repair Tasks" -errorMessage $sanitizedErrorDetails
@@ -71,7 +64,11 @@ function Start-Repair {
             Show-Error "System File Checker failed. Please check the log file for more details or consult the troubleshooting guide."
             return "System File Checker failed. Please check the log file for more details."
         }
-    } catch {
+
+        # DISM StartComponentCleanup
+        Invoke-DISMOperation -OperationName "StartComponentCleanup" -Arguments "/Online /Cleanup-Image /StartComponentCleanup /ResetBase"
+    }
+    catch {
         $errorDetails = $_.Exception | Out-String
         $sanitizedErrorDetails = ($errorDetails -replace "\s*at .*", "") -replace "\s*in .*", ""
         Write-Log -logFileName "repair_log_errors" -message "Repair tasks failed: $sanitizedErrorDetails" -functionName $MyInvocation.MyCommand.Name
