@@ -12,18 +12,18 @@ WinDragon GUI vBeta
 # Define the file path for winDragon.ps1
 $winDragonScriptPath = "https://raw.githubusercontent.com/galactic-plane/windragon/main/build/winDragon_1.0.0.9.ps1"
 
-    # Define a local temporary file path
-    $tempFilePath = "$env:TEMP\winDragon.ps1"
+# Define a local temporary file path
+$tempFilePath = "$env:TEMP\winDragon.ps1"
 
-    # Download the script
-    try {
-        Invoke-WebRequest -Uri $winDragonScriptURL -OutFile $tempFilePath -ErrorAction Stop
-        Write-Host "WinDragon script downloaded successfully." -ForegroundColor Green
-    } catch {
-        Write-Host "Failed to download the script: $_" -ForegroundColor Red
-        exit
-    }
-    #$winDragonScriptPath = $tempFilePath
+# Download the script
+try {
+    Invoke-WebRequest -Uri $winDragonScriptURL -OutFile $tempFilePath -ErrorAction Stop
+    Write-Host "WinDragon script downloaded successfully." -ForegroundColor Green
+} catch {
+    Write-Host "Failed to download the script: $_" -ForegroundColor Red
+    exit
+}
+$winDragonScriptPath = $tempFilePath
     
 
 # Display ASCII Art in Terminal
