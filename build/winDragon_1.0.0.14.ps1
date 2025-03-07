@@ -670,7 +670,7 @@ function Start-WindowsMaintenance {
 
 
 
-# Function Name: Watch-WindowsMaintenance#
+# Function Name: Watch-WindowsMaintenance
 
 # Description:
 
@@ -748,8 +748,6 @@ function Watch-WindowsMaintenance {
 
 
 
-
-
     while ($attempt -lt $MaxAttempts) {
 
         try {
@@ -776,33 +774,19 @@ function Watch-WindowsMaintenance {
 
             $operation = "Maintenance in progress"
 
-            $progressBarLength = 50
-
             $totalProgress = 100
 
-
+            $global:StartTime = Get-Date
 
             for ($i = 1; $i -le $totalProgress; $i++) {
 
-                $progressFill = [int](($i / $totalProgress) * $progressBarLength)
+                Show-AliveProgress -PercentComplete $i -Message $operation -Symbol "█"
 
-                $emptyFill = $progressBarLength - $progressFill
-
-                $progressBar = '█' * $progressFill + '-' * $emptyFill
-
-                $bytesProcessed = "$(570 + $i)/570"
-
-                $elapsedTime = (Get-Date) - $startTime
-
-                $timeProcessed = "[$($elapsedTime.ToString('hh\:mm\:ss'))]"
-
-                Write-Host -NoNewline "`r${operation}: $i%|$progressBar| $bytesProcessed $timeProcessed"
-
-                Start-Sleep -Milliseconds 100
+                Start-Sleep -Milliseconds 50  # Simulate work
 
             }
 
-            Write-Host ""
+            Write-Host "" # Move to a new line after completion
 
             Write-Log -logFileName "maintenance_scan_log" -message "Waiting on Maintenance to complete: $($runningProcesses.Name -join ', ')" -functionName $MyInvocation.MyCommand.Name
 
@@ -1027,6 +1011,150 @@ function Show-ProgressBar {
     $progressForm.Close()
 
 }
+
+
+
+function Show-AliveProgress {
+
+    param (
+
+        [Parameter(Mandatory=$true)]
+
+        [ValidateRange(1,100)]
+
+        [int]$PercentComplete,
+
+
+
+        [string]$Message = "Loading...",
+
+        
+
+        [string]$Symbol = "█",
+
+        
+
+        [int]$BarLength = 30
+
+    )
+
+
+
+    $filledCount = [math]::Floor(($PercentComplete / 100) * $BarLength)
+
+    $emptyCount = $BarLength - $filledCount
+
+
+
+    # Construct the visual bar
+
+    $bar = ("$Symbol" * $filledCount) + ("-" * $emptyCount)
+
+
+
+    # Estimate remaining time based on percent completion
+
+    $elapsed = (Get-Date) - $global:StartTime
+
+    $remaining = if ($PercentComplete -gt 0) { $elapsed.TotalSeconds / ($PercentComplete / 100) - $elapsed.TotalSeconds } else { 0 }
+
+
+
+    $eta = if ($PercentComplete -lt 100) { ("ETA: " + [math]::Round($remaining, 1) + "s") } else { "Done!" }
+
+
+
+    # Clear the current line and write the progress bar
+
+    Write-Host "`r$Message [$bar] $PercentComplete% $eta" -NoNewline
+
+}
+
+
+
+function Show-AliveProgressSim {
+
+    param (
+
+        [Parameter(Mandatory=$true)]
+
+        [ValidateRange(1,100)]
+
+        [int]$PercentComplete,
+
+
+
+        [string]$Message = "Loading...",
+
+        
+
+        [string]$Symbol = "█",
+
+        
+
+        [int]$BarLength = 30
+
+    )
+
+
+
+    if (-not $global:StartTime) {
+
+        $global:StartTime = Get-Date
+
+    }
+
+
+
+    $currentPercent = 0
+
+
+
+    while ($currentPercent -lt $PercentComplete) {
+
+        $currentPercent = [math]::Min($currentPercent + 1, $PercentComplete) # Increment up to the target percent
+
+        $filledCount = [math]::Floor(($currentPercent / 100) * $BarLength)
+
+        $emptyCount = $BarLength - $filledCount
+
+
+
+        # Construct the visual bar
+
+        $bar = ("$Symbol" * $filledCount) + ("-" * $emptyCount)
+
+
+
+        # Estimate remaining time based on percent completion
+
+        $elapsed = (Get-Date) - $global:StartTime
+
+        $remaining = if ($currentPercent -gt 0) { $elapsed.TotalSeconds / ($currentPercent / 100) - $elapsed.TotalSeconds } else { 0 }
+
+
+
+        $eta = if ($currentPercent -lt 100) { ("ETA: " + [math]::Round($remaining, 1) + "s") } else { "Done!" }
+
+
+
+        # Clear the current line and write the progress bar
+
+        Write-Host "`r$Message [$bar] $currentPercent% $eta" -NoNewline
+
+
+
+        Start-Sleep -Milliseconds 50 # Small delay for animation effect
+
+    }
+
+
+
+    Write-Host "" # Move to the next line after completion
+
+}
+
+
 
 # Function Name: Start-Backup
 
@@ -2662,65 +2790,79 @@ $tasks = @()
 switch ($choice) {
 "1" {
 $tasks = @(
-{ Write-Host "Mirror Backup selected." },
-{ Write-Host "Perform Pre-Backup Tasks" },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Mirror Backup selected..." -Symbol "█" },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-Backup Tasks..." -Symbol "█" },
 { Start-DefenderScan -ScanType QuickScan },
-{ Write-Host "Performing Mirror Backup." },
-{ $operationStatus += Invoke-All-Backups -settings $settings }
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Performing Mirror Backup...." -Symbol "█" },
+{ $operationStatus += Invoke-All-Backups -settings $settings },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Mirror Backup Complete...." -Symbol "█" }
 )
 }
 "2" {
 $tasks = @(
-{ Write-Host "Repair tasks selected." },
-{ Write-Host "Perform Pre-Repair Tasks" },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Repair tasks selected..." -Symbol "█" },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-Repair Tasks..." -Symbol "█" },
 { Start-DefenderScan -ScanType QuickScan },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Starting Windows Maintenance..." -Symbol "█" },
 { Start-WindowsMaintenance },
-{ $operationStatus += Start-Repair }
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Executing Repair..." -Symbol "█" },
+{ $operationStatus += Start-Repair },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Repair Completed." -Symbol "█" }
 )
 }
 "3" {
 $tasks = @(
-{ Write-Host "Update Apps tasks selected." },
-{ Write-Host "Perform Pre-UpdateApps Tasks" },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Update Apps tasks selected..." -Symbol "█" },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-UpdateApps Tasks..." -Symbol "█" },
 { Start-DefenderScan -ScanType QuickScan },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Starting Windows Maintenance..." -Symbol "█" },
 { Start-WindowsMaintenance },
-{ $operationStatus += Update-AllPackages }
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Updating Apps..." -Symbol "█" },
+{ $operationStatus += Update-AllPackages },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Update Completed." -Symbol "█" }
 )
 }
 "4" {
 $tasks = @(
-{ Write-Host "Cleanup tasks selected." },
-{ Write-Host "Perform Pre-Cleanup Tasks" },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Cleanup tasks selected..." -Symbol "█" },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-Cleanup Tasks..." -Symbol "█" },
 { Start-DefenderScan -ScanType QuickScan },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Starting Windows Maintenance..." -Symbol "█" },
 { Start-WindowsMaintenance },
-{ $operationStatus += Start-Cleanup }
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Cleaning up..." -Symbol "█" },
+{ $operationStatus += Start-Cleanup },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Cleanup Completed." -Symbol "█" }
 )
 }
 "5" {
 $tasks = @(
-{ Write-Host "Drive optimization selected." },
-{ Write-Host "Perform Pre-Optimization Tasks" },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Drive optimization selected..." -Symbol "█" },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-Optimization Tasks..." -Symbol "█" },
 { Start-DefenderScan -ScanType QuickScan },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Starting Windows Maintenance..." -Symbol "█" },
 { Start-WindowsMaintenance },
-{ $operationStatus += Start-Optimization }
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Optimizing Drives..." -Symbol "█" },
+{ $operationStatus += Start-Optimization },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Optimization Completed." -Symbol "█" }
 )
 }
 "6" {
 $tasks = @(
-{ Write-Host "Getting Computer Information" },
-{ Start-PCInfo }
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Getting Computer Information..." -Symbol "█" },
+{ Start-PCInfo },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Information Retrieved." -Symbol "█" }
 )
 }
 "7" {
 $tasks = @(
-{ Write-Host "Analyzing Event Logs..." },
-{ Start-EventLogAnalysis }
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Analyzing Event Logs..." -Symbol "█" },
+{ Start-EventLogAnalysis },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Event Log Analysis Completed." -Symbol "█" }
 )
 }
 "8" {
 $tasks = @(
-{ Write-Host "Performing all tasks (Except Mirror Backup)." },
-{ Write-Host "Perform Pre-Operation Tasks" },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Performing all tasks (Except Mirror Backup)..." -Symbol "█" },
 { Start-DefenderScan -ScanType QuickScan },
 { Start-WindowsMaintenance },
 { $operationStatus += Start-Repair },
@@ -2728,13 +2870,13 @@ $tasks = @(
 { $operationStatus += Start-Cleanup },
 { $operationStatus += Start-Optimization },
 { Start-PCInfo },
-{ Start-EventLogAnalysis }
+{ Start-EventLogAnalysis },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "All Selected Tasks Completed." -Symbol "█" }
 )
 }
 "9" {
 $tasks = @(
-{ Write-Host "Performing all tasks." },
-{ Write-Host "Perform Pre-Operation Tasks" },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "Performing all tasks..." -Symbol "█" },
 { Start-DefenderScan -ScanType QuickScan },
 { Start-WindowsMaintenance },
 { Invoke-All-Backups -settings $settings },
@@ -2743,7 +2885,8 @@ $tasks = @(
 { $operationStatus += Start-Cleanup },
 { $operationStatus += Start-Optimization },
 { Start-PCInfo },
-{ Start-EventLogAnalysis }
+{ Start-EventLogAnalysis },
+{ Show-AliveProgressSim -PercentComplete 100 -Message "All Tasks Completed." -Symbol "█" }
 )
 }
 "10" {
@@ -2777,6 +2920,7 @@ exit
 }
 $settings = Initialize-Settings
 do {
+$global:StartTime = Get-Date
 $global:ErrorRecords = @()
 $operationStatus = @()
 $choice = Show-Menu

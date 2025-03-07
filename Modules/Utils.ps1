@@ -329,7 +329,7 @@ function Start-WindowsMaintenance {
     }
 }
 
-# Function Name: Watch-WindowsMaintenance#
+# Function Name: Watch-WindowsMaintenance
 # Description:
 #   This function checks if any Windows maintenance processes are currently running.
 #   It waits for them to complete before proceeding, utilizing a configurable timeout,
@@ -368,7 +368,6 @@ function Watch-WindowsMaintenance {
         'mpcmdrun'       # Windows Defender (Command Line)
     )
 
-
     while ($attempt -lt $MaxAttempts) {
         try {
             # Check if any of the maintenance processes are running
@@ -382,20 +381,13 @@ function Watch-WindowsMaintenance {
         
         if ($runningProcesses.Count -gt 0) {
             $operation = "Maintenance in progress"
-            $progressBarLength = 50
             $totalProgress = 100
-
+            $global:StartTime = Get-Date
             for ($i = 1; $i -le $totalProgress; $i++) {
-                $progressFill = [int](($i / $totalProgress) * $progressBarLength)
-                $emptyFill = $progressBarLength - $progressFill
-                $progressBar = '█' * $progressFill + '-' * $emptyFill
-                $bytesProcessed = "$(570 + $i)/570"
-                $elapsedTime = (Get-Date) - $startTime
-                $timeProcessed = "[$($elapsedTime.ToString('hh\:mm\:ss'))]"
-                Write-Host -NoNewline "`r${operation}: $i%|$progressBar| $bytesProcessed $timeProcessed"
-                Start-Sleep -Milliseconds 100
+                Show-AliveProgress -PercentComplete $i -Message $operation -Symbol "█"
+                Start-Sleep -Milliseconds 50  # Simulate work
             }
-            Write-Host ""
+            Write-Host "" # Move to a new line after completion
             Write-Log -logFileName "maintenance_scan_log" -message "Waiting on Maintenance to complete: $($runningProcesses.Name -join ', ')" -functionName $MyInvocation.MyCommand.Name
         }
         else {
@@ -508,3 +500,75 @@ function Show-ProgressBar {
     # Close Form
     $progressForm.Close()
 }
+
+function Show-AliveProgress {
+    param (
+        [Parameter(Mandatory=$true)]
+        [ValidateRange(1,100)]
+        [int]$PercentComplete,
+
+        [string]$Message = "Loading...",
+        
+        [string]$Symbol = "█",
+        
+        [int]$BarLength = 30
+    )
+
+    $filledCount = [math]::Floor(($PercentComplete / 100) * $BarLength)
+    $emptyCount = $BarLength - $filledCount
+
+    # Construct the visual bar
+    $bar = ("$Symbol" * $filledCount) + ("-" * $emptyCount)
+
+    # Estimate remaining time based on percent completion
+    $elapsed = (Get-Date) - $global:StartTime
+    $remaining = if ($PercentComplete -gt 0) { $elapsed.TotalSeconds / ($PercentComplete / 100) - $elapsed.TotalSeconds } else { 0 }
+
+    $eta = if ($PercentComplete -lt 100) { ("ETA: " + [math]::Round($remaining, 1) + "s") } else { "Done!" }
+
+    # Clear the current line and write the progress bar
+    Write-Host "`r$Message [$bar] $PercentComplete% $eta" -NoNewline
+}
+
+function Show-AliveProgressSim {
+    param (
+        [Parameter(Mandatory=$true)]
+        [ValidateRange(1,100)]
+        [int]$PercentComplete,
+
+        [string]$Message = "Loading...",
+        
+        [string]$Symbol = "█",
+        
+        [int]$BarLength = 30
+    )
+
+    if (-not $global:StartTime) {
+        $global:StartTime = Get-Date
+    }
+
+    $currentPercent = 0
+
+    while ($currentPercent -lt $PercentComplete) {
+        $currentPercent = [math]::Min($currentPercent + 1, $PercentComplete) # Increment up to the target percent
+        $filledCount = [math]::Floor(($currentPercent / 100) * $BarLength)
+        $emptyCount = $BarLength - $filledCount
+
+        # Construct the visual bar
+        $bar = ("$Symbol" * $filledCount) + ("-" * $emptyCount)
+
+        # Estimate remaining time based on percent completion
+        $elapsed = (Get-Date) - $global:StartTime
+        $remaining = if ($currentPercent -gt 0) { $elapsed.TotalSeconds / ($currentPercent / 100) - $elapsed.TotalSeconds } else { 0 }
+
+        $eta = if ($currentPercent -lt 100) { ("ETA: " + [math]::Round($remaining, 1) + "s") } else { "Done!" }
+
+        # Clear the current line and write the progress bar
+        Write-Host "`r$Message [$bar] $currentPercent% $eta" -NoNewline
+
+        Start-Sleep -Milliseconds 50 # Small delay for animation effect
+    }
+
+    Write-Host "" # Move to the next line after completion
+}
+

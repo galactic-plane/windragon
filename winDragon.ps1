@@ -260,65 +260,79 @@ function Initialize-Tasks {
     switch ($choice) {
         "1" {
             $tasks = @(
-                { Write-Host "Mirror Backup selected." },
-                { Write-Host "Perform Pre-Backup Tasks" },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Mirror Backup selected..." -Symbol "█" },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-Backup Tasks..." -Symbol "█" },
                 { Start-DefenderScan -ScanType QuickScan },
-                { Write-Host "Performing Mirror Backup." },
-                { $operationStatus += Invoke-All-Backups -settings $settings }
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Performing Mirror Backup...." -Symbol "█" },
+                { $operationStatus += Invoke-All-Backups -settings $settings },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Mirror Backup Complete...." -Symbol "█" }
             )
         }
         "2" {
             $tasks = @(
-                { Write-Host "Repair tasks selected." },
-                { Write-Host "Perform Pre-Repair Tasks" },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Repair tasks selected..." -Symbol "█" },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-Repair Tasks..." -Symbol "█" },
                 { Start-DefenderScan -ScanType QuickScan },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Starting Windows Maintenance..." -Symbol "█" },
                 { Start-WindowsMaintenance },
-                { $operationStatus += Start-Repair }
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Executing Repair..." -Symbol "█" },
+                { $operationStatus += Start-Repair },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Repair Completed." -Symbol "█" }
             )
         }
         "3" {
             $tasks = @(
-                { Write-Host "Update Apps tasks selected." },
-                { Write-Host "Perform Pre-UpdateApps Tasks" },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Update Apps tasks selected..." -Symbol "█" },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-UpdateApps Tasks..." -Symbol "█" },
                 { Start-DefenderScan -ScanType QuickScan },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Starting Windows Maintenance..." -Symbol "█" },
                 { Start-WindowsMaintenance },
-                { $operationStatus += Update-AllPackages }
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Updating Apps..." -Symbol "█" },
+                { $operationStatus += Update-AllPackages },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Update Completed." -Symbol "█" }
             )
         }
         "4" {
-            $tasks = @(                
-                { Write-Host "Cleanup tasks selected." },
-                { Write-Host "Perform Pre-Cleanup Tasks" },
+            $tasks = @(
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Cleanup tasks selected..." -Symbol "█" },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-Cleanup Tasks..." -Symbol "█" },
                 { Start-DefenderScan -ScanType QuickScan },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Starting Windows Maintenance..." -Symbol "█" },
                 { Start-WindowsMaintenance },
-                { $operationStatus += Start-Cleanup }
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Cleaning up..." -Symbol "█" },
+                { $operationStatus += Start-Cleanup },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Cleanup Completed." -Symbol "█" }
             )
         }
         "5" {
-            $tasks = @(                
-                { Write-Host "Drive optimization selected." },
-                { Write-Host "Perform Pre-Optimization Tasks" },
+            $tasks = @(
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Drive optimization selected..." -Symbol "█" },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-Optimization Tasks..." -Symbol "█" },
                 { Start-DefenderScan -ScanType QuickScan },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Starting Windows Maintenance..." -Symbol "█" },
                 { Start-WindowsMaintenance },
-                { $operationStatus += Start-Optimization }
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Optimizing Drives..." -Symbol "█" },
+                { $operationStatus += Start-Optimization },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Optimization Completed." -Symbol "█" }
             )
         }
         "6" {
             $tasks = @(                
-                { Write-Host "Getting Computer Information" },
-                { Start-PCInfo }
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Getting Computer Information..." -Symbol "█" },
+                { Start-PCInfo },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Information Retrieved." -Symbol "█" }
             )
         }
         "7" {
             $tasks = @(                
-                { Write-Host "Analyzing Event Logs..." },
-                { Start-EventLogAnalysis }
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Analyzing Event Logs..." -Symbol "█" },
+                { Start-EventLogAnalysis },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Event Log Analysis Completed." -Symbol "█" }
             )
         }
         "8" {
             $tasks = @(                
-                { Write-Host "Performing all tasks (Except Mirror Backup)." },
-                { Write-Host "Perform Pre-Operation Tasks" },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Performing all tasks (Except Mirror Backup)..." -Symbol "█" },
                 { Start-DefenderScan -ScanType QuickScan },
                 { Start-WindowsMaintenance },
                 { $operationStatus += Start-Repair },
@@ -326,13 +340,13 @@ function Initialize-Tasks {
                 { $operationStatus += Start-Cleanup },
                 { $operationStatus += Start-Optimization },
                 { Start-PCInfo },
-                { Start-EventLogAnalysis }
+                { Start-EventLogAnalysis },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "All Selected Tasks Completed." -Symbol "█" }
             )
         }
         "9" {
             $tasks = @(                
-                { Write-Host "Performing all tasks." },
-                { Write-Host "Perform Pre-Operation Tasks" },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Performing all tasks..." -Symbol "█" },
                 { Start-DefenderScan -ScanType QuickScan },
                 { Start-WindowsMaintenance },
                 { Invoke-All-Backups -settings $settings },
@@ -341,7 +355,8 @@ function Initialize-Tasks {
                 { $operationStatus += Start-Cleanup },
                 { $operationStatus += Start-Optimization },
                 { Start-PCInfo },
-                { Start-EventLogAnalysis }
+                { Start-EventLogAnalysis },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "All Tasks Completed." -Symbol "█" }
             )
         }
         "10" {
@@ -388,6 +403,7 @@ else {
     # Main script loop
     do {
 
+        $global:StartTime = Get-Date
         $global:ErrorRecords = @()
         $operationStatus = @()
 
