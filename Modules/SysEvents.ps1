@@ -88,7 +88,7 @@ function Show-EventLogEntries {
     if ($entries.Count -gt 0) {
         Show-Message $title
         $entries | ForEach-Object {
-            Write-Host "============================================================" -ForegroundColor $color
+            Write-Host "████████████████████████████████████████████████████" -ForegroundColor $color
             Write-Host "🕒 Time Created: $($_.TimeCreated)" -ForegroundColor Cyan
             Write-Host "🔌 Provider: $($_.ProviderName)" -ForegroundColor Cyan
             Write-Host "🆔 Id: $($_.Id)" -ForegroundColor Cyan

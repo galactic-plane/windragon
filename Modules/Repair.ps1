@@ -13,7 +13,7 @@ function Start-Repair {
             [string]$Arguments
         )
         Write-Log -logFileName "repair_log" -message "Preparing to run $OperationName with arguments: $Arguments" -functionName $MyInvocation.MyCommand.Name
-        Show-Message "Running $OperationName using DISM..."
+        Show-AliveProgressSim -PercentComplete 100 -Message "Performing all tasks..." -Symbol "█"
         Start-Process -FilePath 'dism.exe' -ArgumentList $Arguments -NoNewWindow -Wait
         if ($LASTEXITCODE -ne 0) {
             Write-Log -logFileName "repair_log_errors" -message "$OperationName failed with error code $LASTEXITCODE." -functionName $MyInvocation.MyCommand.Name
@@ -31,7 +31,7 @@ function Start-Repair {
         Invoke-DISMOperation -OperationName "RestoreHealth" -Arguments "/Online /Cleanup-Image /RestoreHealth"
 
         # Running System File Checker
-        Show-Message "Running System File Checker to scan and repair protected system files..."
+        Show-AliveProgressSim -PercentComplete 100 -Message "Performing all tasks..." -Symbol "█"
         try {
             # Validate 'sfc' availability and permissions
             if (-not (Get-Command "sfc" -ErrorAction SilentlyContinue)) {
@@ -47,7 +47,7 @@ function Start-Repair {
             Write-Log -logFileName "sfc_log" -message "SFC process started at $startTime and completed at $endTime." -functionName $MyInvocation.MyCommand.Name
 
             if ($sfcProcess.ExitCode -eq 0) {
-                Show-Message "System File Checker has completed successfully."
+                Show-AliveProgressSim -PercentComplete 100 -Message "Performing all tasks..." -Symbol "█"
                 return "System File Checker has completed successfully."
             }
             else {

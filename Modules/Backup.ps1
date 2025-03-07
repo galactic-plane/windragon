@@ -36,33 +36,33 @@ function Start-Backup {
     # Validate and create source and destination paths
     if (-not [System.IO.Directory]::Exists($source)) {
         try {
-            Write-Host "Source path '$source' does not exist. Attempting to create it..."
+            Show-AliveProgressSim -PercentComplete 100 -Message "Source path '$source' does not exist. Attempting to create it..." -Symbol "█"
             New-Item -ItemType Directory -Path $source | Out-Null
             Write-Log -logFileName "backup_log" -message "Source path '$source' was missing and has been created." -functionName $MyInvocation.MyCommand.Name
             Show-Message "Source path '$source' was missing and has been created."
         }
         catch {
             Write-Log -logFileName "backup_error_log" -message "Error: Failed to create source path '$source'. $_" -functionName $MyInvocation.MyCommand.Name
-            Show-Message "Error: Failed to create source path '$source'."
+            Show-Error "Error: Failed to create source path '$source'."
             return "Robocopy Backup: Failed to create source path."
         }
     }
 
     if (-not [System.IO.Directory]::Exists($destination)) {
         try {
-            Write-Host "Destination path '$destination' does not exist. Attempting to create it..."
+            Show-AliveProgressSim -PercentComplete 100 -Message "Destination path '$destination' does not exist. Attempting to create it..." -Symbol "█"
             New-Item -ItemType Directory -Path $destination | Out-Null
             Write-Log -logFileName "backup_log" -message "Destination path '$destination' was missing and has been created." -functionName $MyInvocation.MyCommand.Name
             Show-Message "Destination path '$destination' was missing and has been created."
         }
         catch {
             Write-Log -logFileName "backup_error_log" -message "Error: Failed to create destination path '$destination'. $_" -functionName $MyInvocation.MyCommand.Name
-            Show-Message "Error: Failed to create destination path '$destination'."
+            Show-Error "Error: Failed to create destination path '$destination'."
             return "Robocopy Backup: Failed to create destination path."
         }
     }
     
-    Show-Message "Starting the backup using Robocopy from $source to $destination..."
+    Show-AliveProgressSim -PercentComplete 100 -Message "Starting the backup using Robocopy from $source to $destination..." -Symbol "█"
     Write-Log -logFileName "backup_log" -message "Starting the backup using Robocopy from $source to $destination..." -functionName $MyInvocation.MyCommand.Name
     try {
         $robocopyArgs = "${source} ${destination} /MIR /FFT /Z /XA:H /W:5 /A-:SH /XD $excludedDirs"
@@ -115,7 +115,7 @@ function Invoke-All-Backups {
     $excludedDirs = $settings.backupnore -join ' '
 
     if ($sources.Count -ne $destinations.Count) {
-        Write-Host "Error: The number of sources and destinations must match."
+        Show-AliveProgressSim -PercentComplete 100 -Message "Error: The number of sources and destinations must match." -Symbol "█"
         return
     }
 
@@ -123,7 +123,7 @@ function Invoke-All-Backups {
         $source = $sources[$i]
         $destination = $destinations[$i]
 
-        Write-Host "Starting backup for Source: $source -> Destination: $destination"
+        Show-AliveProgressSim -PercentComplete 100 -Message "Starting backup for Source: $source -> Destination: $destination" -Symbol "█"
         Start-Backup -source $source -destination $destination -excludedDirs $excludedDirs
     }
 }

@@ -566,7 +566,7 @@ function Show-AliveProgressSim {
         # Clear the current line and write the progress bar
         Write-Host "`r$Message [$bar] $currentPercent% $eta" -NoNewline
 
-        Start-Sleep -Milliseconds 50 # Small delay for animation effect
+        Start-Sleep -Milliseconds 10 # Small delay for animation effect
     }
 
     Write-Host "" # Move to the next line after completion

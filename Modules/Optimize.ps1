@@ -23,7 +23,7 @@ function Start-Optimization {
             
             # Handle the case where no partitions are found
             if ($partitions.Count -eq 0) {
-                Write-Host "No volumes found for optimization. Exiting."
+                Show-AliveProgressSim -PercentComplete 100 -Message "No volumes found for optimization. Exiting." -Symbol "█"
                 Write-Log -logFileName "drive_optimization_log" -message "No volumes found for optimization. Exiting." -functionName $MyInvocation.MyCommand.Name
                 return "No volumes found for optimization. Exiting."
             }
@@ -34,7 +34,7 @@ function Start-Optimization {
                 if ($null -ne $disk) {
                     # If the MediaType is SSD, run an Optimize-Volume with the Trim option
                     if ($disk.MediaType -eq "SSD") {
-                        Write-Host "Running TRIM on SSD: $($disk.FriendlyName)"
+                        Show-AliveProgressSim -PercentComplete 100 -Message "Running TRIM on SSD: $($disk.FriendlyName)" -Symbol "█"
                         Write-Log -logFileName "drive_optimization_log" -message "Running TRIM on SSD: $($disk.FriendlyName)" -functionName $MyInvocation.MyCommand.Name
                         try {
                             Optimize-Volume -DriveLetter $partition.DriveLetter -ReTrim -Verbose
@@ -48,7 +48,7 @@ function Start-Optimization {
                     }
                     # If the MediaType is HDD, run a defragmentation operation
                     elseif ($disk.MediaType -eq "HDD") {
-                        Write-Host "Running Defrag on HDD: $($disk.FriendlyName)"
+                        Show-AliveProgressSim -PercentComplete 100 -Message "Running Defrag on HDD: $($disk.FriendlyName)" -Symbol "█"
                         Write-Log -logFileName "drive_optimization_log" -message "Running Defrag on HDD: $($disk.FriendlyName)"
                         try {
                             Optimize-Volume -DriveLetter $partition.DriveLetter -Defrag -Verbose
@@ -64,7 +64,7 @@ function Start-Optimization {
                 else {
                     # Log additional context information for skipped disks
                     $reason = "Disk is either unmounted or inaccessible."
-                    Write-Host "Skipping optimization on unmounted or inaccessible partition: $($partition.DriveLetter). Reason: $reason"
+                    Show-AliveProgressSim -PercentComplete 100 -Message "Skipping optimization on unmounted or inaccessible partition: $($partition.DriveLetter). Reason: $reason" -Symbol "█"
                     Write-Log -logFileName "drive_optimization_log" -message "Skipped partition: $($partition.DriveLetter). Reason: $reason" -functionName $MyInvocation.MyCommand.Name
                 }
             }

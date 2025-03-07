@@ -6,7 +6,7 @@ function Update-AllPackages {
     # Helper function for logging
     function Log {
         param([string]$Message)
-        Write-Host $Message -ForegroundColor Green
+        Show-AliveProgressSim -PercentComplete 100 -Message $Message -Symbol "█"
     }
 
     # Update Winget packages
@@ -15,10 +15,10 @@ function Update-AllPackages {
         try {
             winget upgrade --all --accept-source-agreements --ignore-warnings --disable-interactivity
         } catch {
-            Write-Host "Error updating Winget packages: $_" -ForegroundColor Red
+            Show-Error "Error updating Winget packages: $_"
         }
     } else {
-        Write-Host "Winget is not installed." -ForegroundColor Yellow
+        Show-AliveProgressSim -PercentComplete 100 -Message "Winget is not installed." -Symbol "█"
     }
 
     # Update Chocolatey packages
@@ -27,10 +27,10 @@ function Update-AllPackages {
         try {
             choco upgrade all -y
         } catch {
-            Write-Host "Error updating Chocolatey packages: $_" -ForegroundColor Red
+            Show-Error "Error updating Chocolatey packages: $_"
         }
     } else {
-        Write-Host "Chocolatey is not installed." -ForegroundColor Yellow
+        Show-AliveProgressSim -PercentComplete 100 -Message "Chocolatey is not installed." -Symbol "█"
     }
 
     # Update Scoop packages
@@ -40,13 +40,13 @@ function Update-AllPackages {
             scoop update
             scoop update *
         } catch {
-            Write-Host "Error updating Scoop packages: $_" -ForegroundColor Red
+            Show-Error "Error updating Scoop packages: $_"
         }
     } else {
-        Write-Host "Scoop is not installed." -ForegroundColor Yellow
+        Show-AliveProgressSim -PercentComplete 100 -Message "Scoop is not installed." -Symbol "█"
     }
 
-   # Update Pip packages
+    # Update Pip packages
     if (Get-Command pip -ErrorAction SilentlyContinue) {
         Log "Updating Pip packages..."
         try {
@@ -59,10 +59,10 @@ function Update-AllPackages {
                 }
             }
         } catch {
-            Write-Host "Error updating Pip packages: $_" -ForegroundColor Red
+            Show-Error "Error updating Pip packages: $_"
         }
     } else {
-        Write-Host "Pip is not installed." -ForegroundColor Yellow
+        Show-AliveProgressSim -PercentComplete 100 -Message "Pip is not installed." -Symbol "█"
     }
 
     # Update Npm packages
@@ -71,10 +71,10 @@ function Update-AllPackages {
         try {
             npm update -g
         } catch {
-            Write-Host "Error updating global npm packages: $_" -ForegroundColor Red
+            Show-Error "Error updating global npm packages: $_"
         }
     } else {
-        Write-Host "Npm is not installed." -ForegroundColor Yellow
+        Show-AliveProgressSim -PercentComplete 100 -Message "Npm is not installed." -Symbol "█"
     }
 
     # Update .NET Tools
@@ -83,10 +83,10 @@ function Update-AllPackages {
         try {
             dotnet tool update --global --all
         } catch {
-            Write-Host "Error updating .NET global tools: $_" -ForegroundColor Red
+            Show-Error "Error updating .NET global tools: $_"
         }
     } else {
-        Write-Host ".NET SDK is not installed." -ForegroundColor Yellow
+        Show-AliveProgressSim -PercentComplete 100 -Message ".NET SDK is not installed." -Symbol "█"
     }
 
     # Update PowerShell modules
@@ -99,9 +99,9 @@ function Update-AllPackages {
                 Update-Module -Name $module -Force
             }
         } catch {
-            Write-Host "Error updating PowerShell modules: $_" -ForegroundColor Red
+            Show-Error "Error updating PowerShell modules: $_"
         }
     } else {
-        Write-Host "PowerShellGet module is not installed." -ForegroundColor Yellow
+        Show-AliveProgressSim -PercentComplete 100 -Message "PowerShellGet module is not installed." -Symbol "█"
     }
 }

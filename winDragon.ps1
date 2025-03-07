@@ -177,7 +177,7 @@ function Show-Dragon {
               ( W | i | n | D | r | a | g | o | n )
                \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ vBeta
 "@
-    Write-Host $dragon -ForegroundColor Yellow
+    Write-Host $dragon -ForegroundColor Red
 }
 
 # Function: Show-Message
@@ -190,10 +190,10 @@ function Show-Message {
         [string]$message
     )
     try {
-        $border = '�' * ($message.Length)
-        Write-Host "┌$border┐" -ForegroundColor Yellow
-        Write-Host " $message " -ForegroundColor Yellow
-        Write-Host "└$border┘" -ForegroundColor Yellow
+        $border = '█' * ($message.Length)
+        Write-Host "┌$border┐" -ForegroundColor White
+        Write-Host " $message " -ForegroundColor White
+        Write-Host "└$border┘" -ForegroundColor White
     }
     catch {
         Write-Host "An error occurred while displaying the message." -ForegroundColor Red
@@ -210,7 +210,7 @@ function Show-Error {
         [string]$message
     )
     try {
-        $border = '�' * ($message.Length)
+        $border = '█' * ($message.Length)
         Write-Host "┌$border┐" -ForegroundColor Red
         Write-Host " $message " -ForegroundColor Red
         Write-Host "└$border┘" -ForegroundColor Red

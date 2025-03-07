@@ -67,7 +67,7 @@ function Clear-RecycleBins {
     foreach ($partition in $partitions) {
         $driveLetter = $partition.DriveLetter
         
-        Write-Host "Emptying Recycle Bin on drive $driveLetter..."
+        Show-AliveProgressSim -PercentComplete 100 -Message "Emptying Recycle Bin on drive $driveLetter..." -Symbol "█"
 
         # Path to the Recycle Bin folder on the drive
         $recycleBinPath = "$driveLetter`:\$Recycle.Bin"
@@ -75,10 +75,10 @@ function Clear-RecycleBins {
         # Delete the contents of the Recycle Bin folder, ignoring errors if the path does not exist
         try {
             Remove-Item -Path "$recycleBinPath\*" -Recurse -Force -ErrorAction SilentlyContinue
-            Write-Host "Recycle Bin on drive $driveLetter has been emptied."
+            Show-AliveProgressSim -PercentComplete 100 -Message "Recycle Bin on drive $driveLetter has been emptied." -Symbol "█"
         }
         catch {
-            Write-Host "Failed to empty Recycle Bin on drive $driveLetter. Error: $_"
+            Show-Error "Failed to empty Recycle Bin on drive $driveLetter. Error: $_"
         }
     }
 }
