@@ -1,3 +1,4 @@
+Add-Type -AssemblyName System.Windows.Forms
 param (
 [int]$RunChoice
 )
@@ -920,47 +921,75 @@ function Show-ProgressBar {
 
 
 
-    $totalSteps = $Tasks.Count # Determine the total number of steps based on the task count
+    # Create Form
 
+    $progressForm = New-Object System.Windows.Forms.Form
 
+    $progressForm.Width = 350
+
+    $progressForm.Height = 150
+
+    $progressForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedSingle
+
+    $progressForm.Text = "Processing Tasks..."
+
+    
+
+    # Create Progress Bar
+
+    $progressBar = New-Object System.Windows.Forms.ProgressBar
+
+    $progressBar.Location = New-Object System.Drawing.Point(10, 50)
+
+    $progressBar.Size = New-Object System.Drawing.Size(320, 20)
+
+    $progressBar.Minimum = 0
+
+    $progressBar.Maximum = 100
+
+    $progressForm.Controls.Add($progressBar)
+
+    
+
+    # Create Label
+
+    $progressLabel = New-Object System.Windows.Forms.Label
+
+    $progressLabel.Location = New-Object System.Drawing.Point(10, 20)
+
+    $progressLabel.Size = New-Object System.Drawing.Size(320, 20)
+
+    $progressLabel.Text = "0% Complete"
+
+    $progressLabel.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
+
+    $progressForm.Controls.Add($progressLabel)
+
+    
+
+    # Show Form
+
+    $progressForm.Show()
+
+    
+
+    $totalSteps = $Tasks.Count
+
+    
 
     for ($i = 0; $i -lt $totalSteps; $i++) {
 
-        ResetConsoleScreen # Clear the console screen for a clean display
-
-        $percentComplete = [math]::Round((($i + 1) / $totalSteps) * 100, 2) # Calculate the percentage complete and round to 2 decimal places
-
-        # Enhanced custom progress bar
-
-        $barLength = 50 # Length of the progress bar in characters
-
-        $filledLength = [math]::Round(($percentComplete / 100) * $barLength)
-
-        $progressBar = "".PadLeft($filledLength, '█') + "".PadRight($barLength - $filledLength, '░') # Use solid and light blocks for a visual enhancement
+        $percentComplete = [math]::Round((($i + 1) / $totalSteps) * 100, 2)
 
         
 
-        # Progress bar display with task information
+        # Update Progress Bar and Label
 
-        Write-Host "`r" -NoNewline
+        $progressBar.Value = $percentComplete
 
-        Write-Host "[" -NoNewline -ForegroundColor Yellow
+        $progressLabel.Text = "$percentComplete% Complete - Task $($i + 1) of $totalSteps"
 
-        Write-Host "$progressBar" -NoNewline -ForegroundColor Green
-
-        Write-Host "]" -NoNewline -ForegroundColor Yellow
-
-        Write-Host " $percentComplete% - " -NoNewline -ForegroundColor Yellow
-
-        Write-Host "Executing:" -NoNewline -ForegroundColor White
-
-        Write-Host " - Task $($i + 1) of $totalSteps" -NoNewline -ForegroundColor Yellow
-
-        Write-Host "`n"
-
-        Write-Host "`n"
-
-
+        
 
         # Execute the current task with error handling
 
@@ -972,15 +1001,13 @@ function Show-ProgressBar {
 
         catch {
 
-            Write-Log -logFileName "task_errors" -message "Task $($i + 1) failed: $_" -functionName $MyInvocation.MyCommand.Name
-
-            Write-Error "Task $($i + 1) failed: $_"
+            Write-Host "Task $($i + 1) failed: $_"
 
         }
 
 
 
-        # Delay and clear screen after each task, but keep progress bar at the top
+        # Delay between tasks
 
         if ($i -lt ($totalSteps - 1)) {
 
@@ -989,6 +1016,12 @@ function Show-ProgressBar {
         }
 
     }
+
+    
+
+    # Close Form
+
+    $progressForm.Close()
 
 }
 

@@ -65,6 +65,8 @@
 # - PowerShell 7.4.6 or newer
 # - Administrator privileges to perform system-level operations like repair, cleanup, and optimization.
 
+Add-Type -AssemblyName System.Windows.Forms
+
 param (
     [int]$RunChoice
 )
