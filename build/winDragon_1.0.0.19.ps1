@@ -2437,7 +2437,7 @@ function Start-PCInfo {
 
 
 
-    Write-Host "✅ Computer Information Collection Completed Successfully! ✅" -ForegroundColor Green -BackgroundColor Black
+    Show-Message "✅ Computer Information Collection Completed Successfully! ✅"
 
 }
 # Function: Search-OnlineForInfo
@@ -2620,7 +2620,7 @@ function Show-EventLogEntries {
 
         $entries | ForEach-Object {
 
-            Write-Host "████████████████████████████████████████████████████" -ForegroundColor $color
+            Write-Host "--------------------------------------------------------------" -ForegroundColor $color
 
             Write-Host "🕒 Time Created: $($_.TimeCreated)" -ForegroundColor Cyan
 
@@ -2676,7 +2676,7 @@ function Start-EventLogAnalysis {
 
         $systemLogErrors = Get-EventLogEntries -logName "System" -level 2 -maxEvents 10
 
-        Show-EventLogEntries -title "🔥 System Log Errors (Last 10) 🔥" -entries $systemLogErrors -color "Magenta"
+        Show-EventLogEntries -title "🔥 System Log Errors (Last 10) 🔥" -entries $systemLogErrors -color "White"
 
     }
 

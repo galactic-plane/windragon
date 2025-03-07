@@ -6,7 +6,7 @@ $asciiArt = @"
 | (__) || ()() || :\/: || :\/: |
 | '--'P|| '--'R|| '--'O|| '--'G|
 `------'`------'`------'`------'
-WinDragon GUI vBeta
+WinDragon GUI vBeta build 2025.03.07.01
 "@
 
 # Define the file path for winDragon.ps1

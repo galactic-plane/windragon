@@ -158,5 +158,5 @@ function Start-PCInfo {
 
     Write-Host "`n"
 
-    Write-Host "✅ Computer Information Collection Completed Successfully! ✅" -ForegroundColor Green -BackgroundColor Black
+    Show-Message "✅ Computer Information Collection Completed Successfully! ✅"
 }

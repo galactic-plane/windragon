@@ -88,7 +88,7 @@ function Show-EventLogEntries {
     if ($entries.Count -gt 0) {
         Show-Message $title
         $entries | ForEach-Object {
-            Write-Host "████████████████████████████████████████████████████" -ForegroundColor $color
+            Write-Host "--------------------------------------------------------------" -ForegroundColor $color
             Write-Host "🕒 Time Created: $($_.TimeCreated)" -ForegroundColor Cyan
             Write-Host "🔌 Provider: $($_.ProviderName)" -ForegroundColor Cyan
             Write-Host "🆔 Id: $($_.Id)" -ForegroundColor Cyan
@@ -116,7 +116,7 @@ function Start-EventLogAnalysis {
     Show-Message "🚀 Analyzing Event Logs... Please wait..."
     try {
         $systemLogErrors = Get-EventLogEntries -logName "System" -level 2 -maxEvents 10
-        Show-EventLogEntries -title "🔥 System Log Errors (Last 10) 🔥" -entries $systemLogErrors -color "Magenta"
+        Show-EventLogEntries -title "🔥 System Log Errors (Last 10) 🔥" -entries $systemLogErrors -color "White"
     }
     catch {
         $errorDetails = $_.Exception | Out-String
