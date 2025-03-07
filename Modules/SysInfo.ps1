@@ -17,13 +17,7 @@ function Start-PCInfo {
     Show-Message "✨ System Information ✨"
     try {
         # Log and display Basic system information
-        $basicInfo = Get-ComputerInfo | Select-Object CSName, WindowsVersion, OSArchitecture, WindowsBuildLabEx
-        $basicInfo | ForEach-Object {
-            $_ | Format-List | Out-String | ForEach-Object {
-                Show-Message $_
-                Write-Log -logFileName "system_info_log" -message "BasicSystemInfo: $_" -functionName "Get-ComputerInfo"
-            }
-        }
+        Get-ComputerInfo | Select-Object CSName, WindowsVersion, OSArchitecture, WindowsBuildLabEx | Format-List       
     }
     catch {
         Write-Error "Error retrieving basic system information: $_"
@@ -35,13 +29,7 @@ function Start-PCInfo {
     Show-Message "🔥 CPU Information 🔥"
     try {
         # Log and display CPU information
-        $cpuInfo = Get-CimInstance -ClassName Win32_Processor | Select-Object Name, NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed
-        $cpuInfo | ForEach-Object {
-            $_ | Format-List | Out-String | ForEach-Object {
-                Show-Message $_
-                Write-Log -logFileName "system_info_log" -message "CPUInfo: $_" -functionName "Get-CimInstance (CPU)"
-            }
-        }
+        Get-CimInstance -ClassName Win32_Processor | Select-Object Name, NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed | Format-List         
     }
     catch {
         Write-Error "Error retrieving basic system information: $_"
@@ -53,13 +41,7 @@ function Start-PCInfo {
     Show-Message "🌱 Memory Information 🌱"
     try {
         # Log and display Memory information
-        $memoryInfo = Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object Manufacturer, Capacity, Speed, MemoryType
-        $memoryInfo | ForEach-Object {
-            $_ | Format-List | Out-String | ForEach-Object {
-                Show-Message $_
-                Write-Log -logFileName "system_info_log" -message "MemoryInfo: $_" -functionName "Get-CimInstance (Memory)"
-            }
-        }
+        Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object Manufacturer, Capacity, Speed, MemoryType | Format-List        
     }
     catch {
         Write-Error "Error retrieving basic system information: $_"
@@ -71,13 +53,7 @@ function Start-PCInfo {
     Show-Message "💾 Disk Information 💾"
     try {
         # Log and display Disk information
-        $diskInfo = Get-CimInstance -ClassName Win32_DiskDrive | Select-Object DeviceID, Model, Size
-        $diskInfo | ForEach-Object {
-            $_ | Format-List | Out-String | ForEach-Object {
-                Show-Message $_
-                Write-Log -logFileName "system_info_log" -message "DiskInfo: $_" -functionName "Get-CimInstance (Disk)"
-            }
-        }
+        Get-CimInstance -ClassName Win32_DiskDrive | Select-Object DeviceID, Model, Size | Format-List         
     }
     catch {
         Write-Error "Error retrieving basic system information: $_"
@@ -89,13 +65,7 @@ function Start-PCInfo {
     Show-Message "🌐 Network Adapter Information 🌐"
     try {
         # Log and display Network adapter information
-        $networkInfo = Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object Name, MACAddress, LinkSpeed
-        $networkInfo | ForEach-Object {
-            $_ | Format-List | Out-String | ForEach-Object {
-                Show-Message $_
-                Write-Log -logFileName "system_info_log" -message "NetworkInfo: $_" -functionName "Get-NetAdapter (Network)"
-            }
-        }
+        Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object Name, MACAddress, LinkSpeed | Format-List         
     }
     catch {
         Write-Error "Error retrieving basic system information: $_"
@@ -107,13 +77,7 @@ function Start-PCInfo {
     Show-Message "🖥️ OS Details 🖥️"
     try {
         # Log and display Operating system details
-        $osInfo = Get-CimInstance -ClassName Win32_OperatingSystem
-        $osInfo | ForEach-Object {
-            $_ | Format-List | Out-String | ForEach-Object {
-                Show-Message $_
-                Write-Log -logFileName "system_info_log" -message "OSInfo: $_" -functionName "Get-CimInstance (OS)"
-            }
-        }
+        Get-CimInstance -ClassName Win32_OperatingSystem | Format-List        
     }
     catch {
         Write-Error "Error retrieving basic system information: $_"
@@ -125,13 +89,7 @@ function Start-PCInfo {
     Show-Message "📜 BIOS Information 📜"
     try {
         # Log and display BIOS information
-        $biosInfo = Get-CimInstance -ClassName Win32_BIOS
-        $biosInfo | ForEach-Object {
-            $_ | Format-List | Out-String | ForEach-Object {
-                Show-Message $_
-                Write-Log -logFileName "system_info_log" -message "BIOSInfo: $_" -functionName "Get-CimInstance (BIOS)"
-            }
-        }
+        Get-CimInstance -ClassName Win32_BIOS | Format-List        
     }
     catch {
         Write-Error "Error retrieving basic system information: $_"
@@ -143,13 +101,7 @@ function Start-PCInfo {
     Show-Message "🎨 GPU Information 🎨"
     try {
         # Log and display GPU information
-        $gpuInfo = Get-CimInstance -ClassName Win32_VideoController
-        $gpuInfo | ForEach-Object {
-            $_ | Format-List | Out-String | ForEach-Object {
-                Show-Message $_
-                Write-Log -logFileName "system_info_log" -message "GPUInfo: $_" -functionName "Get-CimInstance (GPU)"
-            }
-        }
+        Get-CimInstance -ClassName Win32_VideoController | Format-List        
     }
     catch {
         Write-Error "Error retrieving basic system information: $_"

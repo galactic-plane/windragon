@@ -2155,19 +2155,7 @@ function Start-PCInfo {
 
         # Log and display Basic system information
 
-        $basicInfo = Get-ComputerInfo | Select-Object CSName, WindowsVersion, OSArchitecture, WindowsBuildLabEx
-
-        $basicInfo | ForEach-Object {
-
-            $_ | Format-List | Out-String | ForEach-Object {
-
-                Show-Message $_
-
-                Write-Log -logFileName "system_info_log" -message "BasicSystemInfo: $_" -functionName "Get-ComputerInfo"
-
-            }
-
-        }
+        Get-ComputerInfo | Select-Object CSName, WindowsVersion, OSArchitecture, WindowsBuildLabEx | Format-List       
 
     }
 
@@ -2191,19 +2179,7 @@ function Start-PCInfo {
 
         # Log and display CPU information
 
-        $cpuInfo = Get-CimInstance -ClassName Win32_Processor | Select-Object Name, NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed
-
-        $cpuInfo | ForEach-Object {
-
-            $_ | Format-List | Out-String | ForEach-Object {
-
-                Show-Message $_
-
-                Write-Log -logFileName "system_info_log" -message "CPUInfo: $_" -functionName "Get-CimInstance (CPU)"
-
-            }
-
-        }
+        Get-CimInstance -ClassName Win32_Processor | Select-Object Name, NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed | Format-List         
 
     }
 
@@ -2227,19 +2203,7 @@ function Start-PCInfo {
 
         # Log and display Memory information
 
-        $memoryInfo = Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object Manufacturer, Capacity, Speed, MemoryType
-
-        $memoryInfo | ForEach-Object {
-
-            $_ | Format-List | Out-String | ForEach-Object {
-
-                Show-Message $_
-
-                Write-Log -logFileName "system_info_log" -message "MemoryInfo: $_" -functionName "Get-CimInstance (Memory)"
-
-            }
-
-        }
+        Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object Manufacturer, Capacity, Speed, MemoryType | Format-List        
 
     }
 
@@ -2263,19 +2227,7 @@ function Start-PCInfo {
 
         # Log and display Disk information
 
-        $diskInfo = Get-CimInstance -ClassName Win32_DiskDrive | Select-Object DeviceID, Model, Size
-
-        $diskInfo | ForEach-Object {
-
-            $_ | Format-List | Out-String | ForEach-Object {
-
-                Show-Message $_
-
-                Write-Log -logFileName "system_info_log" -message "DiskInfo: $_" -functionName "Get-CimInstance (Disk)"
-
-            }
-
-        }
+        Get-CimInstance -ClassName Win32_DiskDrive | Select-Object DeviceID, Model, Size | Format-List         
 
     }
 
@@ -2299,19 +2251,7 @@ function Start-PCInfo {
 
         # Log and display Network adapter information
 
-        $networkInfo = Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object Name, MACAddress, LinkSpeed
-
-        $networkInfo | ForEach-Object {
-
-            $_ | Format-List | Out-String | ForEach-Object {
-
-                Show-Message $_
-
-                Write-Log -logFileName "system_info_log" -message "NetworkInfo: $_" -functionName "Get-NetAdapter (Network)"
-
-            }
-
-        }
+        Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object Name, MACAddress, LinkSpeed | Format-List         
 
     }
 
@@ -2335,19 +2275,7 @@ function Start-PCInfo {
 
         # Log and display Operating system details
 
-        $osInfo = Get-CimInstance -ClassName Win32_OperatingSystem
-
-        $osInfo | ForEach-Object {
-
-            $_ | Format-List | Out-String | ForEach-Object {
-
-                Show-Message $_
-
-                Write-Log -logFileName "system_info_log" -message "OSInfo: $_" -functionName "Get-CimInstance (OS)"
-
-            }
-
-        }
+        Get-CimInstance -ClassName Win32_OperatingSystem | Format-List        
 
     }
 
@@ -2371,19 +2299,7 @@ function Start-PCInfo {
 
         # Log and display BIOS information
 
-        $biosInfo = Get-CimInstance -ClassName Win32_BIOS
-
-        $biosInfo | ForEach-Object {
-
-            $_ | Format-List | Out-String | ForEach-Object {
-
-                Show-Message $_
-
-                Write-Log -logFileName "system_info_log" -message "BIOSInfo: $_" -functionName "Get-CimInstance (BIOS)"
-
-            }
-
-        }
+        Get-CimInstance -ClassName Win32_BIOS | Format-List        
 
     }
 
@@ -2407,19 +2323,7 @@ function Start-PCInfo {
 
         # Log and display GPU information
 
-        $gpuInfo = Get-CimInstance -ClassName Win32_VideoController
-
-        $gpuInfo | ForEach-Object {
-
-            $_ | Format-List | Out-String | ForEach-Object {
-
-                Show-Message $_
-
-                Write-Log -logFileName "system_info_log" -message "GPUInfo: $_" -functionName "Get-CimInstance (GPU)"
-
-            }
-
-        }
+        Get-CimInstance -ClassName Win32_VideoController | Format-List        
 
     }
 
