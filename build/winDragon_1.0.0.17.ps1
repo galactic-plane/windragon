@@ -2732,9 +2732,9 @@ param (
 [string]$message
 )
 try {
-$border = '█' * ($message.Length)
+$border = '-' * ($message.Length)
 Write-Host "┌$border┐" -ForegroundColor White
-Write-Host " $message " -ForegroundColor White
+Write-Host " $message " -ForegroundColor Cyan
 Write-Host "└$border┘" -ForegroundColor White
 }
 catch {
@@ -2747,7 +2747,7 @@ param (
 [string]$message
 )
 try {
-$border = '█' * ($message.Length)
+$border = '-' * ($message.Length)
 Write-Host "┌$border┐" -ForegroundColor Red
 Write-Host " $message " -ForegroundColor Red
 Write-Host "└$border┘" -ForegroundColor Red
