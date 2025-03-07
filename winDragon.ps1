@@ -65,8 +65,6 @@
 # - PowerShell 7.4.6 or newer
 # - Administrator privileges to perform system-level operations like repair, cleanup, and optimization.
 
-Add-Type -AssemblyName System.Windows.Forms
-
 param (
     [int]$RunChoice
 )
@@ -83,6 +81,8 @@ $global:ErrorRecords = @()
 $global:QuickScanRunOnce = $false
 # Global variable to ensure the maintenance scan runs only once
 $global:MaintenanceScanRunOnce = $false
+
+Add-Type -AssemblyName System.Windows.Forms
 
 #####################################
 # Import the Utils Module

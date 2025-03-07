@@ -1,4 +1,3 @@
-Add-Type -AssemblyName System.Windows.Forms
 param (
 [int]$RunChoice
 )
@@ -9,6 +8,7 @@ exit
 $global:ErrorRecords = @()
 $global:QuickScanRunOnce = $false
 $global:MaintenanceScanRunOnce = $false
+Add-Type -AssemblyName System.Windows.Forms
 # SYNOPSIS
 
 #     Moves the cursor to the top-left corner of the console and clears the screen.
