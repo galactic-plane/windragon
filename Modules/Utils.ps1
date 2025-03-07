@@ -217,13 +217,13 @@ function Start-DefenderScan {
     # Check if Windows Defender is the default antivirus provider
     $defaultAV = Get-MpPreference
     if ($null -eq $defaultAV) {
-        Write-Host "Windows Defender is not the default virus scanner. Exiting function."
+        Show-Error "Windows Defender is not the default virus scanner. Exiting function."
         return
     }
 
     # Check if the quick scan has run at least once
     if (-not $global:QuickScanRunOnce -or $Force) {
-        Write-Host "Starting Windows Defender Quick Scan..." -ForegroundColor Green
+        Show-Message "Starting Windows Defender Quick Scan..."
         # Command to start the quick scan
         Start-MpScan -ScanType QuickScan
 
@@ -236,15 +236,15 @@ function Start-DefenderScan {
 
         # Check if a quick scan is overdue and run the appropriate scan
         if ($computerStatus.QuickScanOverdue -eq $true) {
-            Write-Host "Quick scan is overdue. Starting a quick virus scan with Windows Defender..."
+            Show-Message "Quick scan is overdue. Starting a quick virus scan with Windows Defender..."
             Start-MpScan -ScanType QuickScan
         }
         elseif ($computerStatus.FullScanOverdue -eq $true) {
-            Write-Host "Full scan is overdue. Starting a full virus scan with Windows Defender..."
+            Show-Message "Full scan is overdue. Starting a full virus scan with Windows Defender..."
             Start-MpScan -ScanType FullScan
         }
         else {
-            Write-Host "No scans are overdue. No action taken."
+            Show-Message "No scans are overdue. No action taken."
         }
     }
 
@@ -263,7 +263,7 @@ function Start-DefenderScan {
 function Start-WindowsMaintenance {
 
     if ($global:MaintenanceScanRunOnce) {
-        Write-Host "Windows Automatic Maintenance has already been initiated. Skipping..."
+        Show-Message "Windows Automatic Maintenance has already been initiated. Skipping..."
         return; # Skip if maintenance has already been initiated
     }
 
@@ -272,27 +272,27 @@ function Start-WindowsMaintenance {
     $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
 
     if ($null -eq $service) {
-        Write-Host "The Task Scheduler service ($serviceName) is not found on this system."
+        Show-Error "The Task Scheduler service ($serviceName) is not found on this system."
         Write-Log -logFileName "maintenance_scan_log" -message "The Task Scheduler service ($serviceName) is not found on this system." -functionName $MyInvocation.MyCommand.Name
         return
     }
 
     if ($service.Status -ne 'Running') {
-        Write-Host "The Task Scheduler service ($serviceName) is not running. Starting it now..."
+        Show-Message "The Task Scheduler service ($serviceName) is not running. Starting it now..."
         Write-Log -logFileName "maintenance_scan_log" -message "The Task Scheduler service ($serviceName) is not running. Starting it now..." -functionName $MyInvocation.MyCommand.Name
         $maxRetries = 3
         $retryCount = 0
         while ($retryCount -lt $maxRetries) {
             try {
                 Start-Service -Name $serviceName
-                Write-Host "Task Scheduler service started successfully."
+                Show-Message "Task Scheduler service started successfully."
                 Write-Log -logFileName "maintenance_scan_log" -message "Task Scheduler service started successfully." -functionName $MyInvocation.MyCommand.Name
                 break
             }
             catch {
                 # Enhanced logging for troubleshooting
                 $errorDetails = $_.Exception | Out-String 
-                Write-Host "Failed to start the Task Scheduler service. Attempt $($retryCount + 1) of $maxRetries. Error: $_"
+                Show-Error "Failed to start the Task Scheduler service. Attempt $($retryCount + 1) of $maxRetries. Error: $_"
                 Write-Log -logFileName "maintenance_scan_log_errors" -message "Maintenance failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
                 $retryCount++
                 if ($retryCount -ge $maxRetries) {
@@ -308,9 +308,9 @@ function Start-WindowsMaintenance {
     # Trigger Automatic Maintenance
     try {
         if (-not $global:MaintenanceScanRunOnce) {
-            Write-Host "Starting Windows Automatic Maintenance..." -ForegroundColor Green            
+            Show-Message "Starting Windows Automatic Maintenance..."           
             & 'C:\Windows\System32\MSchedExe.exe' Start
-            Write-Host "Windows Automatic Maintenance started successfully."
+            Show-Message "Windows Automatic Maintenance started successfully."
             Write-Log -logFileName "maintenance_scan_log" -message "Windows Automatic Maintenance started successfully." -functionName $MyInvocation.MyCommand.Name
             Watch-WindowsMaintenance -TimeoutMinutes 30 -MaxAttempts 120 -MaxWaitSeconds 10
     
@@ -318,13 +318,13 @@ function Start-WindowsMaintenance {
             $global:MaintenanceScanRunOnce = $true
         }
         else {
-            Write-Host "Windows Automatic Maintenance has already been initiated. Skipping..."
+            Show-Message "Windows Automatic Maintenance has already been initiated. Skipping..."
             Write-Log -logFileName "maintenance_scan_log" -message "Windows Automatic Maintenance has already been initiated. Skipping..." -functionName $MyInvocation.MyCommand.Name
         }       
     }
     catch {
         $errorDetails = $_.Exception | Out-String 
-        Write-Host "Failed to start Windows Automatic Maintenance. Error: $_"
+        Show-Message "Failed to start Windows Automatic Maintenance. Error: $_"
         Write-Log -logFileName "maintenance_scan_log_errors" -message "Maintenance failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
     }
 }
@@ -350,7 +350,7 @@ function Watch-WindowsMaintenance {
         [int]$MaxWaitSeconds = 10  # Set a configurable maximum wait time (in seconds) for exponential backoff
     )
 
-    Write-Host "Checking the status of Maintenance..."
+    Show-Message "Checking the status of Maintenance..."
     Write-Log -logFileName "maintenance_scan_log" -message "Checking the status of Maintenance..." -functionName $MyInvocation.MyCommand.Name
 
     $startTime = Get-Date
@@ -391,7 +391,7 @@ function Watch-WindowsMaintenance {
             Write-Log -logFileName "maintenance_scan_log" -message "Waiting on Maintenance to complete: $($runningProcesses.Name -join ', ')" -functionName $MyInvocation.MyCommand.Name
         }
         else {
-            Write-Host "Maintenance is not running."
+            Show-Message "Maintenance is not running."
             Write-Log -logFileName "maintenance_scan_log" -message "Maintenance processes are not running." -functionName $MyInvocation.MyCommand.Name
             break
         }
@@ -400,7 +400,7 @@ function Watch-WindowsMaintenance {
         if ($TimeoutMinutes -gt 0) {
             $elapsedTime = (Get-Date) - $startTime
             if ($elapsedTime.TotalMinutes -ge $TimeoutMinutes) {
-                Write-Host "Timeout reached. Stopping Maintenance."
+                Show-Message "Timeout reached. Stopping Maintenance."
                 Write-Log -logFileName "maintenance_scan_log" -message "Timeout reached. Stopping Maintenance." -functionName $MyInvocation.MyCommand.Name
                 break
             }
@@ -413,11 +413,11 @@ function Watch-WindowsMaintenance {
     }
 
     if ($attempt -ge $MaxAttempts) {
-        Write-Host "Maximum number of attempts reached. Exiting."
+        Show-Error "Maximum number of attempts reached. Exiting."
         Write-Log -logFileName "maintenance_scan_log" -message "Maximum number of attempts reached. Exiting." -functionName $MyInvocation.MyCommand.Name
     }
 
-    Write-Host "Maintenance has completed."
+    Show-Message "Maintenance has completed."
     Write-Log -logFileName "maintenance_scan_log" -message "Maintenance has completed." -functionName $MyInvocation.MyCommand.Name
 }
 

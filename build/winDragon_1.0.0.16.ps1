@@ -446,7 +446,7 @@ function Start-DefenderScan {
 
     if ($null -eq $defaultAV) {
 
-        Write-Host "Windows Defender is not the default virus scanner. Exiting function."
+        Show-Error "Windows Defender is not the default virus scanner. Exiting function."
 
         return
 
@@ -458,7 +458,7 @@ function Start-DefenderScan {
 
     if (-not $global:QuickScanRunOnce -or $Force) {
 
-        Write-Host "Starting Windows Defender Quick Scan..." -ForegroundColor Green
+        Show-Message "Starting Windows Defender Quick Scan..."
 
         # Command to start the quick scan
 
@@ -484,7 +484,7 @@ function Start-DefenderScan {
 
         if ($computerStatus.QuickScanOverdue -eq $true) {
 
-            Write-Host "Quick scan is overdue. Starting a quick virus scan with Windows Defender..."
+            Show-Message "Quick scan is overdue. Starting a quick virus scan with Windows Defender..."
 
             Start-MpScan -ScanType QuickScan
 
@@ -492,7 +492,7 @@ function Start-DefenderScan {
 
         elseif ($computerStatus.FullScanOverdue -eq $true) {
 
-            Write-Host "Full scan is overdue. Starting a full virus scan with Windows Defender..."
+            Show-Message "Full scan is overdue. Starting a full virus scan with Windows Defender..."
 
             Start-MpScan -ScanType FullScan
 
@@ -500,7 +500,7 @@ function Start-DefenderScan {
 
         else {
 
-            Write-Host "No scans are overdue. No action taken."
+            Show-Message "No scans are overdue. No action taken."
 
         }
 
@@ -538,7 +538,7 @@ function Start-WindowsMaintenance {
 
     if ($global:MaintenanceScanRunOnce) {
 
-        Write-Host "Windows Automatic Maintenance has already been initiated. Skipping..."
+        Show-Message "Windows Automatic Maintenance has already been initiated. Skipping..."
 
         return; # Skip if maintenance has already been initiated
 
@@ -556,7 +556,7 @@ function Start-WindowsMaintenance {
 
     if ($null -eq $service) {
 
-        Write-Host "The Task Scheduler service ($serviceName) is not found on this system."
+        Show-Error "The Task Scheduler service ($serviceName) is not found on this system."
 
         Write-Log -logFileName "maintenance_scan_log" -message "The Task Scheduler service ($serviceName) is not found on this system." -functionName $MyInvocation.MyCommand.Name
 
@@ -568,7 +568,7 @@ function Start-WindowsMaintenance {
 
     if ($service.Status -ne 'Running') {
 
-        Write-Host "The Task Scheduler service ($serviceName) is not running. Starting it now..."
+        Show-Message "The Task Scheduler service ($serviceName) is not running. Starting it now..."
 
         Write-Log -logFileName "maintenance_scan_log" -message "The Task Scheduler service ($serviceName) is not running. Starting it now..." -functionName $MyInvocation.MyCommand.Name
 
@@ -582,7 +582,7 @@ function Start-WindowsMaintenance {
 
                 Start-Service -Name $serviceName
 
-                Write-Host "Task Scheduler service started successfully."
+                Show-Message "Task Scheduler service started successfully."
 
                 Write-Log -logFileName "maintenance_scan_log" -message "Task Scheduler service started successfully." -functionName $MyInvocation.MyCommand.Name
 
@@ -596,7 +596,7 @@ function Start-WindowsMaintenance {
 
                 $errorDetails = $_.Exception | Out-String 
 
-                Write-Host "Failed to start the Task Scheduler service. Attempt $($retryCount + 1) of $maxRetries. Error: $_"
+                Show-Error "Failed to start the Task Scheduler service. Attempt $($retryCount + 1) of $maxRetries. Error: $_"
 
                 Write-Log -logFileName "maintenance_scan_log_errors" -message "Maintenance failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
 
@@ -628,11 +628,11 @@ function Start-WindowsMaintenance {
 
         if (-not $global:MaintenanceScanRunOnce) {
 
-            Write-Host "Starting Windows Automatic Maintenance..." -ForegroundColor Green            
+            Show-Message "Starting Windows Automatic Maintenance..."           
 
             & 'C:\Windows\System32\MSchedExe.exe' Start
 
-            Write-Host "Windows Automatic Maintenance started successfully."
+            Show-Message "Windows Automatic Maintenance started successfully."
 
             Write-Log -logFileName "maintenance_scan_log" -message "Windows Automatic Maintenance started successfully." -functionName $MyInvocation.MyCommand.Name
 
@@ -648,7 +648,7 @@ function Start-WindowsMaintenance {
 
         else {
 
-            Write-Host "Windows Automatic Maintenance has already been initiated. Skipping..."
+            Show-Message "Windows Automatic Maintenance has already been initiated. Skipping..."
 
             Write-Log -logFileName "maintenance_scan_log" -message "Windows Automatic Maintenance has already been initiated. Skipping..." -functionName $MyInvocation.MyCommand.Name
 
@@ -660,7 +660,7 @@ function Start-WindowsMaintenance {
 
         $errorDetails = $_.Exception | Out-String 
 
-        Write-Host "Failed to start Windows Automatic Maintenance. Error: $_"
+        Show-Message "Failed to start Windows Automatic Maintenance. Error: $_"
 
         Write-Log -logFileName "maintenance_scan_log_errors" -message "Maintenance failed: $errorDetails" -functionName $MyInvocation.MyCommand.Name
 
@@ -712,7 +712,7 @@ function Watch-WindowsMaintenance {
 
 
 
-    Write-Host "Checking the status of Maintenance..."
+    Show-Message "Checking the status of Maintenance..."
 
     Write-Log -logFileName "maintenance_scan_log" -message "Checking the status of Maintenance..." -functionName $MyInvocation.MyCommand.Name
 
@@ -794,7 +794,7 @@ function Watch-WindowsMaintenance {
 
         else {
 
-            Write-Host "Maintenance is not running."
+            Show-Message "Maintenance is not running."
 
             Write-Log -logFileName "maintenance_scan_log" -message "Maintenance processes are not running." -functionName $MyInvocation.MyCommand.Name
 
@@ -812,7 +812,7 @@ function Watch-WindowsMaintenance {
 
             if ($elapsedTime.TotalMinutes -ge $TimeoutMinutes) {
 
-                Write-Host "Timeout reached. Stopping Maintenance."
+                Show-Message "Timeout reached. Stopping Maintenance."
 
                 Write-Log -logFileName "maintenance_scan_log" -message "Timeout reached. Stopping Maintenance." -functionName $MyInvocation.MyCommand.Name
 
@@ -838,7 +838,7 @@ function Watch-WindowsMaintenance {
 
     if ($attempt -ge $MaxAttempts) {
 
-        Write-Host "Maximum number of attempts reached. Exiting."
+        Show-Error "Maximum number of attempts reached. Exiting."
 
         Write-Log -logFileName "maintenance_scan_log" -message "Maximum number of attempts reached. Exiting." -functionName $MyInvocation.MyCommand.Name
 
@@ -846,7 +846,7 @@ function Watch-WindowsMaintenance {
 
 
 
-    Write-Host "Maintenance has completed."
+    Show-Message "Maintenance has completed."
 
     Write-Log -logFileName "maintenance_scan_log" -message "Maintenance has completed." -functionName $MyInvocation.MyCommand.Name
 
@@ -1921,7 +1921,7 @@ function Clear-RecycleBins {
 
         
 
-        Show-AliveProgressSim -PercentComplete 100 -Message "Emptying Recycle Bin on drive $driveLetter..." -Symbol "█"
+        Show-Message "Emptying Recycle Bin on drive $driveLetter..."
 
 
 
@@ -2143,13 +2143,13 @@ function Start-Optimization {
 
 function Start-PCInfo {
 
-    Write-Host "💻🔍 Generating Computer Information..." -ForegroundColor Yellow -BackgroundColor Black
+    Show-Message "💻 Generating Computer Information 💻"
 
     Write-Host "`n"
 
 
 
-    Show-Message "✨ System Information ✨" -ForegroundColor White -BackgroundColor DarkBlue
+    Show-Message "✨ System Information ✨"
 
     try {
 
@@ -2161,7 +2161,7 @@ function Start-PCInfo {
 
             $_ | Format-List | Out-String | ForEach-Object {
 
-                Write-Host $_ -ForegroundColor White
+                Show-Message $_
 
                 Write-Log -logFileName "system_info_log" -message "BasicSystemInfo: $_" -functionName "Get-ComputerInfo"
 
@@ -2173,7 +2173,7 @@ function Start-PCInfo {
 
     catch {
 
-        Write-Host "Error retrieving basic system information: $_" -ForegroundColor Red
+        Write-Error "Error retrieving basic system information: $_"
 
         Write-Log -logFileName "system_info_log" -message "Error retrieving basic system information: $_" -functionName "Get-ComputerInfo"
 
@@ -2185,7 +2185,7 @@ function Start-PCInfo {
 
 
 
-    Show-Message "🔥 CPU Information 🔥" -ForegroundColor Yellow -BackgroundColor DarkGreen
+    Show-Message "🔥 CPU Information 🔥"
 
     try {
 
@@ -2197,7 +2197,7 @@ function Start-PCInfo {
 
             $_ | Format-List | Out-String | ForEach-Object {
 
-                Write-Host $_ -ForegroundColor Yellow
+                Show-Message $_
 
                 Write-Log -logFileName "system_info_log" -message "CPUInfo: $_" -functionName "Get-CimInstance (CPU)"
 
@@ -2209,7 +2209,7 @@ function Start-PCInfo {
 
     catch {
 
-        Write-Host "Error retrieving basic system information: $_" -ForegroundColor Red
+        Write-Error "Error retrieving basic system information: $_"
 
         Write-Log -logFileName "system_info_log" -message "Error retrieving basic system information: $_" -functionName "Get-ComputerInfo"
 
@@ -2221,7 +2221,7 @@ function Start-PCInfo {
 
 
 
-    Show-Message "🌱 Memory Information 🌱" -ForegroundColor Green -BackgroundColor DarkYellow
+    Show-Message "🌱 Memory Information 🌱"
 
     try {
 
@@ -2233,7 +2233,7 @@ function Start-PCInfo {
 
             $_ | Format-List | Out-String | ForEach-Object {
 
-                Write-Host $_ -ForegroundColor Green
+                Show-Message $_
 
                 Write-Log -logFileName "system_info_log" -message "MemoryInfo: $_" -functionName "Get-CimInstance (Memory)"
 
@@ -2245,7 +2245,7 @@ function Start-PCInfo {
 
     catch {
 
-        Write-Host "Error retrieving basic system information: $_" -ForegroundColor Red
+        Write-Error "Error retrieving basic system information: $_"
 
         Write-Log -logFileName "system_info_log" -message "Error retrieving basic system information: $_" -functionName "Get-ComputerInfo"
 
@@ -2257,7 +2257,7 @@ function Start-PCInfo {
 
 
 
-    Show-Message "💾 Disk Information 💾" -ForegroundColor Cyan -BackgroundColor DarkRed
+    Show-Message "💾 Disk Information 💾"
 
     try {
 
@@ -2269,7 +2269,7 @@ function Start-PCInfo {
 
             $_ | Format-List | Out-String | ForEach-Object {
 
-                Write-Host $_ -ForegroundColor Cyan
+                Show-Message $_
 
                 Write-Log -logFileName "system_info_log" -message "DiskInfo: $_" -functionName "Get-CimInstance (Disk)"
 
@@ -2281,7 +2281,7 @@ function Start-PCInfo {
 
     catch {
 
-        Write-Host "Error retrieving basic system information: $_" -ForegroundColor Red
+        Write-Error "Error retrieving basic system information: $_"
 
         Write-Log -logFileName "system_info_log" -message "Error retrieving basic system information: $_" -functionName "Get-ComputerInfo"
 
@@ -2293,7 +2293,7 @@ function Start-PCInfo {
 
 
 
-    Show-Message "🌐 Network Adapter Information 🌐" -ForegroundColor Gray -BackgroundColor DarkMagenta
+    Show-Message "🌐 Network Adapter Information 🌐"
 
     try {
 
@@ -2305,7 +2305,7 @@ function Start-PCInfo {
 
             $_ | Format-List | Out-String | ForEach-Object {
 
-                Write-Host $_ -ForegroundColor Gray
+                Show-Message $_
 
                 Write-Log -logFileName "system_info_log" -message "NetworkInfo: $_" -functionName "Get-NetAdapter (Network)"
 
@@ -2317,7 +2317,7 @@ function Start-PCInfo {
 
     catch {
 
-        Write-Host "Error retrieving basic system information: $_" -ForegroundColor Red
+        Write-Error "Error retrieving basic system information: $_"
 
         Write-Log -logFileName "system_info_log" -message "Error retrieving basic system information: $_" -functionName "Get-ComputerInfo"
 
@@ -2329,7 +2329,7 @@ function Start-PCInfo {
 
 
 
-    Show-Message "🖥️ OS Details 🖥️" -ForegroundColor White -BackgroundColor DarkGreen
+    Show-Message "🖥️ OS Details 🖥️"
 
     try {
 
@@ -2341,7 +2341,7 @@ function Start-PCInfo {
 
             $_ | Format-List | Out-String | ForEach-Object {
 
-                Write-Host $_ -ForegroundColor White
+                Show-Message $_
 
                 Write-Log -logFileName "system_info_log" -message "OSInfo: $_" -functionName "Get-CimInstance (OS)"
 
@@ -2353,7 +2353,7 @@ function Start-PCInfo {
 
     catch {
 
-        Write-Host "Error retrieving basic system information: $_" -ForegroundColor Red
+        Write-Error "Error retrieving basic system information: $_"
 
         Write-Log -logFileName "system_info_log" -message "Error retrieving basic system information: $_" -functionName "Get-ComputerInfo"
 
@@ -2365,7 +2365,7 @@ function Start-PCInfo {
 
 
 
-    Show-Message "📜 BIOS Information 📜" -ForegroundColor Yellow -BackgroundColor DarkCyan
+    Show-Message "📜 BIOS Information 📜"
 
     try {
 
@@ -2377,7 +2377,7 @@ function Start-PCInfo {
 
             $_ | Format-List | Out-String | ForEach-Object {
 
-                Write-Host $_ -ForegroundColor Yellow
+                Show-Message $_
 
                 Write-Log -logFileName "system_info_log" -message "BIOSInfo: $_" -functionName "Get-CimInstance (BIOS)"
 
@@ -2389,7 +2389,7 @@ function Start-PCInfo {
 
     catch {
 
-        Write-Host "Error retrieving basic system information: $_" -ForegroundColor Red
+        Write-Error "Error retrieving basic system information: $_"
 
         Write-Log -logFileName "system_info_log" -message "Error retrieving basic system information: $_" -functionName "Get-ComputerInfo"
 
@@ -2401,7 +2401,7 @@ function Start-PCInfo {
 
 
 
-    Show-Message "🎨 GPU Information 🎨" -ForegroundColor Blue -BackgroundColor DarkYellow
+    Show-Message "🎨 GPU Information 🎨"
 
     try {
 
@@ -2413,7 +2413,7 @@ function Start-PCInfo {
 
             $_ | Format-List | Out-String | ForEach-Object {
 
-                Write-Host $_ -ForegroundColor Blue
+                Show-Message $_
 
                 Write-Log -logFileName "system_info_log" -message "GPUInfo: $_" -functionName "Get-CimInstance (GPU)"
 
@@ -2425,7 +2425,7 @@ function Start-PCInfo {
 
     catch {
 
-        Write-Host "Error retrieving basic system information: $_" -ForegroundColor Red
+        Write-Error "Error retrieving basic system information: $_"
 
         Write-Log -logFileName "system_info_log" -message "Error retrieving basic system information: $_" -functionName "Get-ComputerInfo"
 
@@ -2723,7 +2723,7 @@ function Show-Dragon {
               ( W | i | n | D | r | a | g | o | n )
                \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ vBeta
 "@
-    Write-Host $dragon -ForegroundColor Red
+    Write-Host $dragon -ForegroundColor Cyan
 }
 
 function Show-Message {
@@ -2760,9 +2760,9 @@ function Show-Menu {
 ResetConsoleScreen
     Show-Dragon
 Write-Host "`n"
-Write-Host "================================================================" -ForegroundColor Cyan
+Write-Host "████████████████████████████████████████████████████████████████" -ForegroundColor Cyan
 Write-Host "                 SYSTEM TASK MENU                               " -ForegroundColor Yellow
-Write-Host "================================================================" -ForegroundColor Cyan
+Write-Host "████████████████████████████████████████████████████████████████" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Please select an option:" -ForegroundColor Green
 Write-Host ""
@@ -2777,7 +2777,7 @@ Write-Host "  8. Start All Tasks (Except Backup)" -ForegroundColor White
 Write-Host "  9. Start All Tasks" -ForegroundColor White
 Write-Host " 10. Exit" -ForegroundColor White
 Write-Host ""
-Write-Host "================================================================" -ForegroundColor Cyan
+Write-Host "████████████████████████████████████████████████████████████████" -ForegroundColor Cyan
 $choice = Read-Host "Enter the number of your choice"
 return $choice
 }
@@ -2815,8 +2815,6 @@ $tasks = @(
 { Show-AliveProgressSim -PercentComplete 100 -Message "Update Apps tasks selected..." -Symbol "█" },
 { Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-UpdateApps Tasks..." -Symbol "█" },
 { Start-DefenderScan -ScanType QuickScan },
-{ Show-AliveProgressSim -PercentComplete 100 -Message "Starting Windows Maintenance..." -Symbol "█" },
-{ Start-WindowsMaintenance },
 { Show-AliveProgressSim -PercentComplete 100 -Message "Updating Apps..." -Symbol "█" },
 { $operationStatus += Update-AllPackages },
 { Show-AliveProgressSim -PercentComplete 100 -Message "Update Completed." -Symbol "█" }
@@ -2827,8 +2825,6 @@ $tasks = @(
 { Show-AliveProgressSim -PercentComplete 100 -Message "Cleanup tasks selected..." -Symbol "█" },
 { Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-Cleanup Tasks..." -Symbol "█" },
 { Start-DefenderScan -ScanType QuickScan },
-{ Show-AliveProgressSim -PercentComplete 100 -Message "Starting Windows Maintenance..." -Symbol "█" },
-{ Start-WindowsMaintenance },
 { Show-AliveProgressSim -PercentComplete 100 -Message "Cleaning up..." -Symbol "█" },
 { $operationStatus += Start-Cleanup },
 { Show-AliveProgressSim -PercentComplete 100 -Message "Cleanup Completed." -Symbol "█" }
@@ -2839,8 +2835,6 @@ $tasks = @(
 { Show-AliveProgressSim -PercentComplete 100 -Message "Drive optimization selected..." -Symbol "█" },
 { Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-Optimization Tasks..." -Symbol "█" },
 { Start-DefenderScan -ScanType QuickScan },
-{ Show-AliveProgressSim -PercentComplete 100 -Message "Starting Windows Maintenance..." -Symbol "█" },
-{ Start-WindowsMaintenance },
 { Show-AliveProgressSim -PercentComplete 100 -Message "Optimizing Drives..." -Symbol "█" },
 { $operationStatus += Start-Optimization },
 { Show-AliveProgressSim -PercentComplete 100 -Message "Optimization Completed." -Symbol "█" }

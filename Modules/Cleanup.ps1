@@ -67,7 +67,7 @@ function Clear-RecycleBins {
     foreach ($partition in $partitions) {
         $driveLetter = $partition.DriveLetter
         
-        Show-AliveProgressSim -PercentComplete 100 -Message "Emptying Recycle Bin on drive $driveLetter..." -Symbol "█"
+        Show-Message "Emptying Recycle Bin on drive $driveLetter..."
 
         # Path to the Recycle Bin folder on the drive
         $recycleBinPath = "$driveLetter`:\$Recycle.Bin"

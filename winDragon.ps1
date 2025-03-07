@@ -177,7 +177,7 @@ function Show-Dragon {
               ( W | i | n | D | r | a | g | o | n )
                \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ vBeta
 "@
-    Write-Host $dragon -ForegroundColor Red
+    Write-Host $dragon -ForegroundColor Cyan
 }
 
 # Function: Show-Message
@@ -229,9 +229,9 @@ function Show-Menu {
     ResetConsoleScreen
     Show-Dragon
     Write-Host "`n"
-    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "████████████████████████████████████████████████████████████████" -ForegroundColor Cyan
     Write-Host "                 SYSTEM TASK MENU                               " -ForegroundColor Yellow
-    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "████████████████████████████████████████████████████████████████" -ForegroundColor Cyan
     Write-Host "" 
     Write-Host "Please select an option:" -ForegroundColor Green
     Write-Host "" 
@@ -246,7 +246,7 @@ function Show-Menu {
     Write-Host "  9. Start All Tasks" -ForegroundColor White
     Write-Host " 10. Exit" -ForegroundColor White
     Write-Host "" 
-    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "████████████████████████████████████████████████████████████████" -ForegroundColor Cyan
     $choice = Read-Host "Enter the number of your choice"
     return $choice
 }
@@ -284,9 +284,7 @@ function Initialize-Tasks {
             $tasks = @(
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Update Apps tasks selected..." -Symbol "█" },
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-UpdateApps Tasks..." -Symbol "█" },
-                { Start-DefenderScan -ScanType QuickScan },
-                { Show-AliveProgressSim -PercentComplete 100 -Message "Starting Windows Maintenance..." -Symbol "█" },
-                { Start-WindowsMaintenance },
+                { Start-DefenderScan -ScanType QuickScan },              
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Updating Apps..." -Symbol "█" },
                 { $operationStatus += Update-AllPackages },
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Update Completed." -Symbol "█" }
@@ -296,9 +294,7 @@ function Initialize-Tasks {
             $tasks = @(
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Cleanup tasks selected..." -Symbol "█" },
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-Cleanup Tasks..." -Symbol "█" },
-                { Start-DefenderScan -ScanType QuickScan },
-                { Show-AliveProgressSim -PercentComplete 100 -Message "Starting Windows Maintenance..." -Symbol "█" },
-                { Start-WindowsMaintenance },
+                { Start-DefenderScan -ScanType QuickScan },               
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Cleaning up..." -Symbol "█" },
                 { $operationStatus += Start-Cleanup },
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Cleanup Completed." -Symbol "█" }
@@ -308,9 +304,7 @@ function Initialize-Tasks {
             $tasks = @(
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Drive optimization selected..." -Symbol "█" },
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-Optimization Tasks..." -Symbol "█" },
-                { Start-DefenderScan -ScanType QuickScan },
-                { Show-AliveProgressSim -PercentComplete 100 -Message "Starting Windows Maintenance..." -Symbol "█" },
-                { Start-WindowsMaintenance },
+                { Start-DefenderScan -ScanType QuickScan },               
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Optimizing Drives..." -Symbol "█" },
                 { $operationStatus += Start-Optimization },
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Optimization Completed." -Symbol "█" }
