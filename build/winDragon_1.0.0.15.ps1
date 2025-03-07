@@ -1144,7 +1144,7 @@ function Show-AliveProgressSim {
 
 
 
-        Start-Sleep -Milliseconds 50 # Small delay for animation effect
+        Start-Sleep -Milliseconds 10 # Small delay for animation effect
 
     }
 
@@ -1232,7 +1232,7 @@ function Start-Backup {
 
         try {
 
-            Write-Host "Source path '$source' does not exist. Attempting to create it..."
+            Show-AliveProgressSim -PercentComplete 100 -Message "Source path '$source' does not exist. Attempting to create it..." -Symbol "█"
 
             New-Item -ItemType Directory -Path $source | Out-Null
 
@@ -1246,7 +1246,7 @@ function Start-Backup {
 
             Write-Log -logFileName "backup_error_log" -message "Error: Failed to create source path '$source'. $_" -functionName $MyInvocation.MyCommand.Name
 
-            Show-Message "Error: Failed to create source path '$source'."
+            Show-Error "Error: Failed to create source path '$source'."
 
             return "Robocopy Backup: Failed to create source path."
 
@@ -1260,7 +1260,7 @@ function Start-Backup {
 
         try {
 
-            Write-Host "Destination path '$destination' does not exist. Attempting to create it..."
+            Show-AliveProgressSim -PercentComplete 100 -Message "Destination path '$destination' does not exist. Attempting to create it..." -Symbol "█"
 
             New-Item -ItemType Directory -Path $destination | Out-Null
 
@@ -1274,7 +1274,7 @@ function Start-Backup {
 
             Write-Log -logFileName "backup_error_log" -message "Error: Failed to create destination path '$destination'. $_" -functionName $MyInvocation.MyCommand.Name
 
-            Show-Message "Error: Failed to create destination path '$destination'."
+            Show-Error "Error: Failed to create destination path '$destination'."
 
             return "Robocopy Backup: Failed to create destination path."
 
@@ -1284,7 +1284,7 @@ function Start-Backup {
 
     
 
-    Show-Message "Starting the backup using Robocopy from $source to $destination..."
+    Show-AliveProgressSim -PercentComplete 100 -Message "Starting the backup using Robocopy from $source to $destination..." -Symbol "█"
 
     Write-Log -logFileName "backup_log" -message "Starting the backup using Robocopy from $source to $destination..." -functionName $MyInvocation.MyCommand.Name
 
@@ -1390,7 +1390,7 @@ function Invoke-All-Backups {
 
     if ($sources.Count -ne $destinations.Count) {
 
-        Write-Host "Error: The number of sources and destinations must match."
+        Show-AliveProgressSim -PercentComplete 100 -Message "Error: The number of sources and destinations must match." -Symbol "█"
 
         return
 
@@ -1406,7 +1406,7 @@ function Invoke-All-Backups {
 
 
 
-        Write-Host "Starting backup for Source: $source -> Destination: $destination"
+        Show-AliveProgressSim -PercentComplete 100 -Message "Starting backup for Source: $source -> Destination: $destination" -Symbol "█"
 
         Start-Backup -source $source -destination $destination -excludedDirs $excludedDirs
 
@@ -1443,7 +1443,7 @@ function Start-Repair {
 
         Write-Log -logFileName "repair_log" -message "Preparing to run $OperationName with arguments: $Arguments" -functionName $MyInvocation.MyCommand.Name
 
-        Show-Message "Running $OperationName using DISM..."
+        Show-AliveProgressSim -PercentComplete 100 -Message "Performing all tasks..." -Symbol "█"
 
         Start-Process -FilePath 'dism.exe' -ArgumentList $Arguments -NoNewWindow -Wait
 
@@ -1479,7 +1479,7 @@ function Start-Repair {
 
         # Running System File Checker
 
-        Show-Message "Running System File Checker to scan and repair protected system files..."
+        Show-AliveProgressSim -PercentComplete 100 -Message "Performing all tasks..." -Symbol "█"
 
         try {
 
@@ -1511,7 +1511,7 @@ function Start-Repair {
 
             if ($sfcProcess.ExitCode -eq 0) {
 
-                Show-Message "System File Checker has completed successfully."
+                Show-AliveProgressSim -PercentComplete 100 -Message "Performing all tasks..." -Symbol "█"
 
                 return "System File Checker has completed successfully."
 
@@ -1586,7 +1586,7 @@ function Update-AllPackages {
 
         param([string]$Message)
 
-        Write-Host $Message -ForegroundColor Green
+        Show-AliveProgressSim -PercentComplete 100 -Message $Message -Symbol "█"
 
     }
 
@@ -1604,13 +1604,13 @@ function Update-AllPackages {
 
         } catch {
 
-            Write-Host "Error updating Winget packages: $_" -ForegroundColor Red
+            Show-Error "Error updating Winget packages: $_"
 
         }
 
     } else {
 
-        Write-Host "Winget is not installed." -ForegroundColor Yellow
+        Show-AliveProgressSim -PercentComplete 100 -Message "Winget is not installed." -Symbol "█"
 
     }
 
@@ -1628,13 +1628,13 @@ function Update-AllPackages {
 
         } catch {
 
-            Write-Host "Error updating Chocolatey packages: $_" -ForegroundColor Red
+            Show-Error "Error updating Chocolatey packages: $_"
 
         }
 
     } else {
 
-        Write-Host "Chocolatey is not installed." -ForegroundColor Yellow
+        Show-AliveProgressSim -PercentComplete 100 -Message "Chocolatey is not installed." -Symbol "█"
 
     }
 
@@ -1654,19 +1654,19 @@ function Update-AllPackages {
 
         } catch {
 
-            Write-Host "Error updating Scoop packages: $_" -ForegroundColor Red
+            Show-Error "Error updating Scoop packages: $_"
 
         }
 
     } else {
 
-        Write-Host "Scoop is not installed." -ForegroundColor Yellow
+        Show-AliveProgressSim -PercentComplete 100 -Message "Scoop is not installed." -Symbol "█"
 
     }
 
 
 
-   # Update Pip packages
+    # Update Pip packages
 
     if (Get-Command pip -ErrorAction SilentlyContinue) {
 
@@ -1692,13 +1692,13 @@ function Update-AllPackages {
 
         } catch {
 
-            Write-Host "Error updating Pip packages: $_" -ForegroundColor Red
+            Show-Error "Error updating Pip packages: $_"
 
         }
 
     } else {
 
-        Write-Host "Pip is not installed." -ForegroundColor Yellow
+        Show-AliveProgressSim -PercentComplete 100 -Message "Pip is not installed." -Symbol "█"
 
     }
 
@@ -1716,13 +1716,13 @@ function Update-AllPackages {
 
         } catch {
 
-            Write-Host "Error updating global npm packages: $_" -ForegroundColor Red
+            Show-Error "Error updating global npm packages: $_"
 
         }
 
     } else {
 
-        Write-Host "Npm is not installed." -ForegroundColor Yellow
+        Show-AliveProgressSim -PercentComplete 100 -Message "Npm is not installed." -Symbol "█"
 
     }
 
@@ -1740,13 +1740,13 @@ function Update-AllPackages {
 
         } catch {
 
-            Write-Host "Error updating .NET global tools: $_" -ForegroundColor Red
+            Show-Error "Error updating .NET global tools: $_"
 
         }
 
     } else {
 
-        Write-Host ".NET SDK is not installed." -ForegroundColor Yellow
+        Show-AliveProgressSim -PercentComplete 100 -Message ".NET SDK is not installed." -Symbol "█"
 
     }
 
@@ -1772,13 +1772,13 @@ function Update-AllPackages {
 
         } catch {
 
-            Write-Host "Error updating PowerShell modules: $_" -ForegroundColor Red
+            Show-Error "Error updating PowerShell modules: $_"
 
         }
 
     } else {
 
-        Write-Host "PowerShellGet module is not installed." -ForegroundColor Yellow
+        Show-AliveProgressSim -PercentComplete 100 -Message "PowerShellGet module is not installed." -Symbol "█"
 
     }
 
@@ -1921,7 +1921,7 @@ function Clear-RecycleBins {
 
         
 
-        Write-Host "Emptying Recycle Bin on drive $driveLetter..."
+        Show-AliveProgressSim -PercentComplete 100 -Message "Emptying Recycle Bin on drive $driveLetter..." -Symbol "█"
 
 
 
@@ -1937,13 +1937,13 @@ function Clear-RecycleBins {
 
             Remove-Item -Path "$recycleBinPath\*" -Recurse -Force -ErrorAction SilentlyContinue
 
-            Write-Host "Recycle Bin on drive $driveLetter has been emptied."
+            Show-AliveProgressSim -PercentComplete 100 -Message "Recycle Bin on drive $driveLetter has been emptied." -Symbol "█"
 
         }
 
         catch {
 
-            Write-Host "Failed to empty Recycle Bin on drive $driveLetter. Error: $_"
+            Show-Error "Failed to empty Recycle Bin on drive $driveLetter. Error: $_"
 
         }
 
@@ -2000,7 +2000,7 @@ function Start-Optimization {
 
             if ($partitions.Count -eq 0) {
 
-                Write-Host "No volumes found for optimization. Exiting."
+                Show-AliveProgressSim -PercentComplete 100 -Message "No volumes found for optimization. Exiting." -Symbol "█"
 
                 Write-Log -logFileName "drive_optimization_log" -message "No volumes found for optimization. Exiting." -functionName $MyInvocation.MyCommand.Name
 
@@ -2022,7 +2022,7 @@ function Start-Optimization {
 
                     if ($disk.MediaType -eq "SSD") {
 
-                        Write-Host "Running TRIM on SSD: $($disk.FriendlyName)"
+                        Show-AliveProgressSim -PercentComplete 100 -Message "Running TRIM on SSD: $($disk.FriendlyName)" -Symbol "█"
 
                         Write-Log -logFileName "drive_optimization_log" -message "Running TRIM on SSD: $($disk.FriendlyName)" -functionName $MyInvocation.MyCommand.Name
 
@@ -2050,7 +2050,7 @@ function Start-Optimization {
 
                     elseif ($disk.MediaType -eq "HDD") {
 
-                        Write-Host "Running Defrag on HDD: $($disk.FriendlyName)"
+                        Show-AliveProgressSim -PercentComplete 100 -Message "Running Defrag on HDD: $($disk.FriendlyName)" -Symbol "█"
 
                         Write-Log -logFileName "drive_optimization_log" -message "Running Defrag on HDD: $($disk.FriendlyName)"
 
@@ -2082,7 +2082,7 @@ function Start-Optimization {
 
                     $reason = "Disk is either unmounted or inaccessible."
 
-                    Write-Host "Skipping optimization on unmounted or inaccessible partition: $($partition.DriveLetter). Reason: $reason"
+                    Show-AliveProgressSim -PercentComplete 100 -Message "Skipping optimization on unmounted or inaccessible partition: $($partition.DriveLetter). Reason: $reason" -Symbol "█"
 
                     Write-Log -logFileName "drive_optimization_log" -message "Skipped partition: $($partition.DriveLetter). Reason: $reason" -functionName $MyInvocation.MyCommand.Name
 
@@ -2620,7 +2620,7 @@ function Show-EventLogEntries {
 
         $entries | ForEach-Object {
 
-            Write-Host "============================================================" -ForegroundColor $color
+            Write-Host "████████████████████████████████████████████████████" -ForegroundColor $color
 
             Write-Host "🕒 Time Created: $($_.TimeCreated)" -ForegroundColor Cyan
 
@@ -2723,7 +2723,7 @@ function Show-Dragon {
               ( W | i | n | D | r | a | g | o | n )
                \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ vBeta
 "@
-    Write-Host $dragon -ForegroundColor Yellow
+    Write-Host $dragon -ForegroundColor Red
 }
 
 function Show-Message {
@@ -2732,10 +2732,10 @@ param (
 [string]$message
 )
 try {
-$border = '�' * ($message.Length)
-Write-Host "┌$border┐" -ForegroundColor Yellow
-Write-Host " $message " -ForegroundColor Yellow
-Write-Host "└$border┘" -ForegroundColor Yellow
+$border = '█' * ($message.Length)
+Write-Host "┌$border┐" -ForegroundColor White
+Write-Host " $message " -ForegroundColor White
+Write-Host "└$border┘" -ForegroundColor White
 }
 catch {
 Write-Host "An error occurred while displaying the message." -ForegroundColor Red
@@ -2747,7 +2747,7 @@ param (
 [string]$message
 )
 try {
-$border = '�' * ($message.Length)
+$border = '█' * ($message.Length)
 Write-Host "┌$border┐" -ForegroundColor Red
 Write-Host " $message " -ForegroundColor Red
 Write-Host "└$border┘" -ForegroundColor Red
