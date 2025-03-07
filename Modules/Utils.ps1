@@ -454,6 +454,8 @@ function Show-ProgressBar {
         [int]$DelayBetweenTasks = 2  # Delay in seconds between tasks (default is 2 seconds)
     )
 
+    Add-Type -AssemblyName System.Windows.Forms
+
     # Create Form
     $progressForm = New-Object System.Windows.Forms.Form
     $progressForm.Width = 350

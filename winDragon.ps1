@@ -82,8 +82,6 @@ $global:QuickScanRunOnce = $false
 # Global variable to ensure the maintenance scan runs only once
 $global:MaintenanceScanRunOnce = $false
 
-Add-Type -AssemblyName System.Windows.Forms
-
 #####################################
 # Import the Utils Module
 . .\Modules\Utils.ps1
