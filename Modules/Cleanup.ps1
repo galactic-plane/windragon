@@ -82,3 +82,43 @@ function Clear-RecycleBins {
         }
     }
 }
+function Clear-TempFolders {
+    param (
+        [string]$JsonResults
+    )
+
+    $cacheFolders = $JsonResults | ConvertFrom-Json
+    $folderIndex = 0
+
+    # Define critical folders to exclude
+    $excludedFolders = @(
+        "WinSxS",
+        "System32",
+        "SysWOW64",
+        "Program Files",
+        "Program Files (x86)",
+        "Windows\Installer",
+        "Windows\Fonts"
+    )
+
+    foreach ($folder in $cacheFolders) {
+        # Check if the folder is in the exclusion list
+        if ($excludedFolders | Where-Object { $folder -match [regex]::Escape($_) }) {
+            Write-Host "Skipping protected folder: $folder"
+            continue
+        }
+
+        $folderIndex++
+        Show-AliveProgressSim -PercentComplete 100 -Message "Clearing: $folder"
+        Write-Host ""
+
+        # Remove all files
+        Get-ChildItem -Path $folder -File -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+
+        # Remove all subdirectories
+        Get-ChildItem -Path $folder -Directory -Recurse -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    
+    Show-AliveProgress -PercentComplete 100 -Message "Temp clearing complete!"
+    Write-Host ""
+}

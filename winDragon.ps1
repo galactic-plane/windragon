@@ -81,6 +81,8 @@ $global:ErrorRecords = @()
 $global:QuickScanRunOnce = $false
 # Global variable to ensure the maintenance scan runs only once
 $global:MaintenanceScanRunOnce = $false
+# Initialize timer for ETA estimation
+$global:StartTime = Get-Date  
 
 #####################################
 # Import the Utils Module
@@ -295,8 +297,18 @@ function Initialize-Tasks {
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Cleanup tasks selected..." -Symbol "█" },
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Perform Pre-Cleanup Tasks..." -Symbol "█" },
                 { Start-DefenderScan -ScanType QuickScan },               
-                { Show-AliveProgressSim -PercentComplete 100 -Message "Cleaning up..." -Symbol "█" },
+                { Show-AliveProgressSim -PercentComplete 100 -Message "Cleaning initialized..." -Symbol "█" },
                 { $operationStatus += Start-Cleanup },
+                { 
+                    $folderName = "cache"
+                    $result = Get-TempDirectories -FolderName $folderName 
+                    Write-Host $result
+                    Clear-TempFolders -JsonResults $result
+                    $folderName = "temp"
+                    $result = Get-TempDirectories -FolderName $folderName 
+                    Write-Host $result
+                    Clear-TempFolders -JsonResults $result                              
+                },
                 { Show-AliveProgressSim -PercentComplete 100 -Message "Cleanup Completed." -Symbol "█" }
             )
         }
@@ -397,7 +409,6 @@ else {
     # Main script loop
     do {
 
-        $global:StartTime = Get-Date
         $global:ErrorRecords = @()
         $operationStatus = @()
 

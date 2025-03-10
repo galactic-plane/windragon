@@ -41,7 +41,7 @@ function Initialize-Settings {
         $defaultSettings = @{
             sources      = @("D:\", "Z:\")
             destinations = @("B:\DDrive", "B:\ZDrive")
-            backupnore = @(
+            backupnore   = @(
                 ".cache",
                 ".docusaurus",
                 ".DS_Store",
@@ -421,6 +421,37 @@ function Watch-WindowsMaintenance {
     Write-Log -logFileName "maintenance_scan_log" -message "Maintenance has completed." -functionName $MyInvocation.MyCommand.Name
 }
 
+function Get-TempDirectories {
+    param (
+        [string]$FolderName = "cache"
+    )
+
+    $drives = Get-PSDrive -PSProvider FileSystem | Select-Object -ExpandProperty Root
+    $foundPaths = [System.Collections.ArrayList]::new()
+    $totalDrives = $drives.Count
+    $driveIndex = 0
+
+    foreach ($drive in $drives) {
+        $driveIndex++
+        $percentComplete = [math]::Round(($driveIndex / $totalDrives) * 100, 2)
+        Show-AliveProgress -PercentComplete $percentComplete -Message "Searching $drive for '$FolderName'..."
+        Write-Host ""
+        
+        $searchResults = Get-ChildItem -Path $drive -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq $FolderName }
+        if ($searchResults) {
+            foreach ($result in $searchResults) {
+                [void]$foundPaths.Add($result.FullName)
+            }
+        }
+    }
+    
+    Show-AliveProgress -PercentComplete 100 -Message "Search complete!"  # Final update
+    Write-Host ""
+    
+    $jsonOutput = $foundPaths | ConvertTo-Json -Depth 2
+    return $jsonOutput
+}
+
 # This function displays a progress bar while executing a series of tasks sequentially.
 # Each task is represented as a script block and is executed in the order provided.
 # The progress bar updates dynamically to reflect the completion status of each task.
@@ -503,8 +534,8 @@ function Show-ProgressBar {
 
 function Show-AliveProgress {
     param (
-        [Parameter(Mandatory=$true)]
-        [ValidateRange(1,100)]
+        [Parameter(Mandatory = $true)]
+        [ValidateRange(1, 100)]
         [int]$PercentComplete,
 
         [string]$Message = "Loading...",
@@ -532,8 +563,8 @@ function Show-AliveProgress {
 
 function Show-AliveProgressSim {
     param (
-        [Parameter(Mandatory=$true)]
-        [ValidateRange(1,100)]
+        [Parameter(Mandatory = $true)]
+        [ValidateRange(1, 100)]
         [int]$PercentComplete,
 
         [string]$Message = "Loading...",

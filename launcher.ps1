@@ -18,6 +18,38 @@ Write-Host $asciiArt -ForegroundColor Cyan
 # Load GUI Components
 Add-Type -AssemblyName PresentationFramework
 
+# Function to Display Status Messages
+function Show-StatusMessage {
+    param (
+        [string]$message
+    )
+    Write-Host ""
+    Write-Host "status: $message" -ForegroundColor Cyan
+    Write-Host ""
+    $outputTextBox.Text += "`nstatus: $message"
+}
+
+# Create Menu
+$menu = New-Object System.Windows.Controls.Menu
+[System.Windows.Controls.DockPanel]::SetDock($menu, "Top")
+$fileMenu = New-Object System.Windows.Controls.MenuItem
+$fileMenu.Header = "File"
+
+$exitMenuItem = New-Object System.Windows.Controls.MenuItem
+$exitMenuItem.Header = "Exit"
+$exitMenuItem.Add_Click({ $window.Close() })
+
+$fileMenu.Items.Add($exitMenuItem) | Out-Null
+$menu.Items.Add($fileMenu) | Out-Null
+
+# Create TabControl
+$tabControl = New-Object System.Windows.Controls.TabControl
+$tabControl.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#060d21")
+
+# Create Maintenance Tab
+$maintenanceTab = New-Object System.Windows.Controls.TabItem
+$maintenanceTab.Header = "Maintenance"
+
 # Create a New Window
 $window = New-Object System.Windows.Window
 $window.Title = "WinDragon GUI"
@@ -95,8 +127,7 @@ $buttonTitles = @(
     "Cleanup Tasks",
     "Drive Optimization",
     "System Information",
-    "Analyze Logs",
-    "Exit"
+    "Analyze Logs"
 )
 
 # Create Button Style
@@ -128,7 +159,6 @@ $buttonTitles | ForEach-Object -Process {
                             3 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $winDragonScriptPath, "-RunChoice", "5" -Wait }
                             4 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $winDragonScriptPath, "-RunChoice", "6" -Wait }
                             5 { Start-Process pwsh -Verb RunAs -ArgumentList "-NoExit", "-File", $winDragonScriptPath, "-RunChoice", "7" -Wait }
-                            6 { Write-Host "Exiting WinDragon GUI" -ForegroundColor Cyan; $window.Close() }
                             Default { Write-Host "Invalid selection" -ForegroundColor Red }
                         }
                     }
@@ -145,19 +175,19 @@ $buttonTitles | ForEach-Object -Process {
     $index++
 }
 
-# Add Grid to Window
-$window.Content = $grid
+# Add Grid to Maintenance Tab
+$maintenanceTab.Content = $grid
 
-# Function to Display Status Messages
-function Show-StatusMessage {
-    param (
-        [string]$message
-    )
-    Write-Host ""
-    Write-Host "status: $message" -ForegroundColor Cyan
-    Write-Host ""
-    $outputTextBox.Text += "`nstatus: $message"
-}
+# Add Maintenance Tab to TabControl
+$tabControl.Items.Add($maintenanceTab) | Out-Null
+
+# Create a DockPanel to hold Menu and Content
+$dockPanel = New-Object System.Windows.Controls.DockPanel
+$dockPanel.Children.Add($menu) | Out-Null
+$dockPanel.Children.Add($tabControl) | Out-Null
+
+# Add DockPanel to Window
+$window.Content = $dockPanel
 
 # Call the function with the message
 Show-StatusMessage -message "running"
